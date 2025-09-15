@@ -56,6 +56,7 @@ class ExerciseApp(ctk.CTk):
         # Start animation
         self.animate_timer()
 
+
     def create_header(self):
         header_frame = ctk.CTkFrame(self, fg_color="#6A0DAD", height=150, corner_radius=0)
         header_frame.grid(row=0, column=0, columnspan=2, sticky="ew")
