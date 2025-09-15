@@ -78,7 +78,7 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         # --- Robot Hand Image (Left Column) ---
         try:
-            robot_hand_image_pil = Image.open("pictures/pose_1/01.jpg") # Assuming 'robot_hand.png'
+            robot_hand_image_pil = Image.open("pictures/pose_1/1.jpg") # Assuming 'robot_hand.png'
             robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS) # Adjust size as needed
             self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
             self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo ,text="")
