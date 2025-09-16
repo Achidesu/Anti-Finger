@@ -12,12 +12,43 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.resizable(False, False) # Prevent resizing for fixed layout
         self.configure(fg_color="#FFFFFF")
 
-        #event
+        # event
         self.key_held = False
+        self.time_max = 5
+        self.time_current = 0
+        self.hand_posit = 0
+        self.still_hold = False
+        self.current_pose = 1
+        self.key = ""
+        self.is_pass = False
+        self.round = 0
+        self.set = 0
+        self.pose_name = ["placeholder",
+                          "เหยียดมือตรง",
+                          "ทำมือคล้ายตะขอ",
+                          "กำมือ",
+                          "กำมือแบบเหยียดปลายนิ้ว",
+                          "งอโคนนิ้วแต่เหยียดปลายนิ้วมือ"]
+        self.extent = 0
+        self.progress = 0
 
-        #keybind
+        self.time_current = self.time_max
+
+        # keybind
         self.bind("<Key-1>", self.on_key_press)
         self.bind("<KeyRelease-1>", self.on_key_release)
+
+        self.bind("<Key-2>", self.on_key_press)
+        self.bind("<KeyRelease-2>", self.on_key_release)
+
+        self.bind("<Key-3>", self.on_key_press)
+        self.bind("<KeyRelease-3>", self.on_key_release)
+
+        self.bind("<Key-4>", self.on_key_press)
+        self.bind("<KeyRelease-4>", self.on_key_release)
+
+        self.bind("<Key-5>", self.on_key_press)
+        self.bind("<KeyRelease-5>", self.on_key_release)
 
         # --- Colors ---
         self.purple_bg = "#6a0dad" # A rich purple for the header
@@ -100,7 +131,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.Label_times_text = ctk.CTkLabel(self.times_line_frame, text="ครั้งที่ : ", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_times_text.pack(side="left", padx=(10,0))
 
-        self.Label_set_times_number = ctk.CTkLabel(self.times_line_frame, text="1", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_set_times_number = ctk.CTkLabel(self.times_line_frame, text=f"{self.round}", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_set_times_number.pack(side="left", padx=(0,10))
 
         # Inner frame to keep เซ็ต and number on the same line
@@ -110,7 +141,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.Label_set_text = ctk.CTkLabel(self.sets_line_frame, text="เซ็ตที่ : ", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_set_text.pack(side="left", padx=(10,0))
 
-        self.Label_set_number = ctk.CTkLabel(self.sets_line_frame, text="1", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_set_number = ctk.CTkLabel(self.sets_line_frame, text=f"{self.set}", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_set_number.pack(side="left", padx=(0,10))
 
 
@@ -127,7 +158,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         # --- Reset Button (Middle Column, Bottom) ---
         self.reset_button = ctk.CTkButton(self.main_content_frame, text="Reset", font=("Sarabun",20),
                                       fg_color=self.red_btn, text_color=self.white_fg,
-                                      command=self.say,
+                                      command=self.reset_action,
                                       height=50, width=200, hover_color=self.hover_red_bt) # Adjust button size
         self.reset_button.grid(row=2, column=1, padx=20, pady=(10,20), sticky="n") # Align to top of its cell
 
@@ -141,9 +172,8 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.timer_canvas.pack()
 
         # Draw the circle (x1, y1, x2, y2)
-        self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10) # MediumSeaGreen
-        self.timer_text = self.timer_canvas.create_text(100, 100, text="5s", font=self.font_timer, fill=self.black_fg)
-
+        self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10,tags="progress") # MediumSeaGreen
+        self.timer_text = self.timer_canvas.create_text(100, 100, text=f"{self.time_current}", font=self.font_timer, fill=self.black_fg)
 
         # --- Small Hand Image (Right Column, Bottom) ---
         try:
@@ -158,25 +188,290 @@ class AntiTriggerFingersApp(ctk.CTk):
             self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0,20), sticky="n")
             print("Warning: small_hand.png not found. Using text placeholder.")
 
+    def timer_reset(self):
+        self.time_current = self.time_max
+        self.hand_posit = 5
+        print("[Debug] : Timer reset!")
+        print("[Debug] : Hand position is rested")
+
+    def update_pic(self):
+        if self.key == "1" and self.current_pose == 1:
+            self.robot_hand_label.destroy()
+            robot_hand_image_pil = Image.open(f"pictures/pose_1/1.jpg")  # Assuming 'robot_hand.png'
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
+            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
+            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+            self.hand_posit = 5
+        elif self.key == "2" and self.current_pose == 2:
+            self.robot_hand_label.destroy()
+            robot_hand_image_pil = Image.open(f"pictures/pose_2/{self.hand_posit}.jpg")  # Assuming 'robot_hand.png'
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
+            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
+            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+        elif self.key == "3" and self.current_pose == 3:
+            self.robot_hand_label.destroy()
+            robot_hand_image_pil = Image.open(f"pictures/pose_3/{self.hand_posit}.jpg")  # Assuming 'robot_hand.png'
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
+            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
+            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+        elif self.key == "4" and self.current_pose == 4:
+            self.robot_hand_label.destroy()
+            robot_hand_image_pil = Image.open(f"pictures/pose_4/{self.hand_posit}.jpg")  # Assuming 'robot_hand.png'
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
+            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
+            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+        elif self.key == "5" and self.current_pose == 5:
+            self.robot_hand_label.destroy()
+            robot_hand_image_pil = Image.open(f"pictures/pose_5/{self.hand_posit}.jpg")  # Assuming 'robot_hand.png'
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
+            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
+            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+        else:
+            print("[Debug] : Out of bounds!.")
+
+    def reset_pic(self):
+        self.robot_hand_label.destroy()
+        robot_hand_image_pil = Image.open(f"pictures/pose_1/1.jpg")  # Assuming 'robot_hand.png'
+        robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+        self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
+        self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
+        self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+        self.timer_canvas.delete("progress")
+        self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10, tags="progress")
+
+    def update_timer(self):
+        if self.time_current > 0:
+            self.progress = (self.time_max - self.time_current) / self.time_max
+            self.extent = 360 * self.progress
+            print(f"[Debug] : Timer : {self.time_current}")
+            self.timer_canvas.delete(self.timer_text)
+            self.timer_canvas.delete("progress")
+            self.timer_text = self.timer_canvas.create_text(100, 100, text=self.time_current, font=self.font_timer,fill=self.black_fg)
+            self.timer_canvas.create_arc(10, 10, 190, 190,start=90,outline="#3CB371", width=10,extent=-self.extent,style="arc",tags="progress")
+        else:
+            print(f"[Debug] : Timer : {self.time_current}")
+            self.timer_canvas.delete(self.timer_text)
+            self.timer_text = self.timer_canvas.create_text(100, 100, text=self.time_current, font=self.font_timer,
+                                                            fill=self.black_fg)
+            self.timer_canvas.delete("progress")
+            self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10, tags="progress")
+
+    def update_round(self):
+        self.Label_set_times_number.destroy()
+        self.Label_set_times_number = ctk.CTkLabel(self.times_line_frame, text=f"{self.round}",font=self.font_medium_text, text_color=self.black_fg,fg_color=self.light_gray_bg)
+        self.Label_set_times_number.pack(side="left", padx=(0, 10))
+        self.Label_set_number.destroy()
+        self.Label_set_number = ctk.CTkLabel(self.sets_line_frame, text=f"{self.set}", font=self.font_medium_text,
+                                             text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_set_number.pack(side="left", padx=(0, 10))
+
+    def update_EX_pose(self):
+        if self.current_pose == 1:
+            self.small_hand_label.destroy()
+            small_hand_image_pil = Image.open("pictures/EX_POSE/pose1.png")  # Assuming 'small_hand.png'
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
+            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
+            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+        elif self.current_pose == 2:
+            self.small_hand_label.destroy()
+            small_hand_image_pil = Image.open("pictures/EX_POSE/pose2.png")  # Assuming 'small_hand.png'
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
+            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
+            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+        elif self.current_pose == 3:
+            self.small_hand_label.destroy()
+            small_hand_image_pil = Image.open("pictures/EX_POSE/pose3.png")  # Assuming 'small_hand.png'
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
+            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
+            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+        elif self.current_pose == 4:
+            self.small_hand_label.destroy()
+            small_hand_image_pil = Image.open("pictures/EX_POSE/pose4.png")  # Assuming 'small_hand.png'
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
+            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
+            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+        elif self.current_pose == 5:
+            self.small_hand_label.destroy()
+            small_hand_image_pil = Image.open("pictures/EX_POSE/pose5.png")  # Assuming 'small_hand.png'
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
+            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
+            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+        else:
+            print("[Debug] Out of bound!")
+
+    def update_text(self):
+        self.Label_pose_thai_text.destroy()
+        self.Label_pose_action_text.destroy()
+        self.Label_pose_thai_text = ctk.CTkLabel(self.pose_text_frame, text=f"ท่าที่ {self.current_pose}", font=self.font_pose_text,
+                                                 text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_pose_thai_text.pack(side="top", pady=(10, 0))
+
+        self.Label_pose_action_text = ctk.CTkLabel(self.pose_text_frame, text=f"{self.pose_name[self.current_pose]}", font=self.font_pose_text,
+                                                   text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_pose_action_text.pack(side="top", pady=(0, 10))
+
+
     def on_key_press(self, event=None):
+        self.key = event.char
         if not self.key_held:
             self.key_held = True
             self.check_key_loop()
 
     def on_key_release(self, event=None):
         self.key_held = False
+        self.hand_posit = 0
+        self.still_hold = False
+
+
 
     def check_key_loop(self):
-        if self.key_held:
-            print("hold")
-            self.after(1000, self.check_key_loop)
+        print(f"[Debug] : {self.key} is pressed")
+        if self.key_held and self.still_hold == False:
+            if self.current_pose == 1 and self.key == "1":
+                if self.hand_posit < 5:
+                    self.hand_posit = self.hand_posit + 1
+                    print(f"[Debug] : hand position is {self.hand_posit}")
+                    self.update_pic()
+
+                if self.hand_posit == 5 and self.time_current >= 0 and self.still_hold == False:
+                    self.time_current = self.time_current - 1
+                    self.update_timer()
+
+                if self.time_current <= -1:
+                    self.update_timer()
+                    self.timer_reset()
+                    self.update_timer()
+                    self.reset_pic()
+                    self.current_pose = self.current_pose + 1
+                    self.update_EX_pose()
+                    self.update_text()
+                    print(f"[Debug] : Current pose is now {self.current_pose}")
+                    self.is_pass = True
+                    print("[Debug] : pose 1 pass")
+
+            elif self.current_pose == 2 and self.key == "2":
+                if self.hand_posit < 5:
+                    self.hand_posit = self.hand_posit + 1
+                    print(f"[Debug] : hand position is {self.hand_posit}")
+                    self.update_pic()
+
+                if self.hand_posit == 5 and self.time_current >= 0 and self.still_hold == False:
+                    self.time_current = self.time_current - 1
+                    self.update_timer()
+
+                if self.time_current <= -1:
+                    self.timer_reset()
+                    self.update_timer()
+                    self.reset_pic()
+                    self.current_pose = self.current_pose + 1
+                    self.update_EX_pose()
+                    self.update_text()
+                    print(f"[Debug] : Current pose is now {self.current_pose}")
+                    self.is_pass = True
+                    print("[Debug] : pose 2 pass")
+
+            elif self.current_pose == 3 and self.key == "3":
+                if self.hand_posit < 5:
+                    self.hand_posit = self.hand_posit + 1
+                    print(f"[Debug] : hand position is {self.hand_posit}")
+                    self.update_pic()
+
+                if self.hand_posit == 5 and self.time_current >= 0 and self.still_hold == False:
+                    self.time_current = self.time_current - 1
+                    self.update_timer()
+
+                if self.time_current <= -1:
+                    self.timer_reset()
+                    self.update_timer()
+                    self.reset_pic()
+                    self.current_pose = self.current_pose + 1
+                    self.update_EX_pose()
+                    self.update_text()
+                    print(f"[Debug] : Current pose is now {self.current_pose}")
+                    self.is_pass = True
+                    print("[Debug] : pose 3 pass")
+
+            elif self.current_pose == 4 and self.key == "4":
+                if self.hand_posit < 5:
+                    self.hand_posit = self.hand_posit + 1
+                    print(f"[Debug] : hand position is {self.hand_posit}")
+                    self.update_pic()
+
+                if self.hand_posit == 5 and self.time_current >= 0 and self.still_hold == False:
+                    self.time_current = self.time_current - 1
+                    self.update_timer()
+
+                if self.time_current <= -1:
+                    self.timer_reset()
+                    self.update_timer()
+                    self.reset_pic()
+                    self.current_pose = self.current_pose + 1
+                    self.update_EX_pose()
+                    self.update_text()
+                    print(f"[Debug] : Current pose is now {self.current_pose}")
+                    self.is_pass = True
+                    print("[Debug] : pose 4 pass")
+
+            elif self.current_pose == 5 and self.key == "5":
+                if self.hand_posit < 5:
+                    self.hand_posit = self.hand_posit + 1
+                    print(f"[Debug] : hand position is {self.hand_posit}")
+                    self.update_pic()
+
+                if self.hand_posit == 5 and self.time_current >= 0 and self.still_hold == False:
+                    self.time_current = self.time_current - 1
+                    self.update_timer()
+
+                if self.time_current <= -1:
+                    self.timer_reset()
+                    self.update_timer()
+                    self.reset_pic()
+                    self.current_pose = 1
+                    self.update_EX_pose()
+                    self.update_text()
+                    self.round = self.round + 1
+                    self.update_round()
+                    print(f"[Debug] : Current pose is now {self.current_pose}")
+                    self.is_pass = True
+                    print("[Debug] : pose 5 pass")
+                    print(f"[Debug] : Round : {self.round}")
+
+
+            else:
+                print("[Debug] : User didn't follow the instructions")
+
+            if self.round >= 10:
+                self.round = 0
+                self.set = self.set + 1
+                self.update_round()
+
+            self.after(100, self.check_key_loop)
+
         else:
-            print("release")
+            print(f"[Debug] : {self.key} is released.")
+            self.still_hold = False
 
-    def say(self):
-        print("reset")
-
-
+    def reset_action(self):
+        self.current_pose = 1
+        self.round = 0
+        self.set = 0
+        self.timer_reset()
+        self.update_timer()
+        self.reset_pic()
+        self.update_EX_pose()
+        self.update_text()
+        self.update_round()
+        print("[Debug] : Reset action")
 
 
 # Create dummy image files for demonstration if they don't exist

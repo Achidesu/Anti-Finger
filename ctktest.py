@@ -1,50 +1,22 @@
-import customtkinter as ctk
 import tkinter as tk
 
-ctk.set_appearance_mode("light")
-ctk.set_default_color_theme("blue")
+# Create the main window
+root = tk.Tk()
+root.title("Full Circle Arc")
 
-class KeyPressApp(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-        self.title("Key Hold Detection Example")
-        self.geometry("400x300")
+# Create a Canvas widget
+canvas = tk.Canvas(root, width=200, height=200, bg="white")
+canvas.pack()
 
-        # Track whether the key is being held down
-        self.key_held = False
+# Define the bounding box for the oval (which will be a circle if square)
+# (x1, y1) is the top-left corner, (x2, y2) is the bottom-right corner
+x1, y1 = 50, 50
+x2, y2 = 150, 150
+coordinates = (x1, y1, x2, y2)
 
-        # Example button to show other controls still work
-        self.button = ctk.CTkButton(self, text="Click Me", command=self.say_hello)
-        self.button.pack(pady=20)
+# Create a full circle using create_arc
+# Set start=0 (or any angle) and extent=360 to draw a complete circle
+canvas.create_arc(coordinates, start=0, extent=360, fill="blue", outline="black", width=2)
 
-        # Bind key press and release
-        self.bind("<space>", self.on_key_press)
-        self.bind("<KeyRelease-space>", self.on_key_release)
-
-        # Label to show feedback
-        self.label = ctk.CTkLabel(self, text="Press and hold SPACE")
-        self.label.pack(pady=20)
-
-    def say_hello(self):
-        self.label.configure(text="Button clicked!")
-
-    def on_key_press(self, event=None):
-        if not self.key_held:  # Start loop only if not already running
-            self.key_held = True
-            self.check_key_loop()
-
-    def on_key_release(self, event=None):
-        self.key_held = False  # Stop the loop
-
-    def check_key_loop(self):
-        """This function keeps running while the key is held."""
-        if self.key_held:
-            self.label.configure(text="SPACE is being held!")
-            # Run this again after 100ms
-            self.after(100, self.check_key_loop)
-        else:
-            self.label.configure(text="SPACE released")
-
-if __name__ == "__main__":
-    app = KeyPressApp()
-    app.mainloop()
+# Run the Tkinter event loop
+root.mainloop()
