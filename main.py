@@ -455,7 +455,7 @@ class AntiTriggerFingersApp(ctk.CTk):
                 self.set = self.set + 1
                 self.update_round()
 
-            self.after(100, self.check_key_loop)
+            self.after(1000, self.check_key_loop)
 
         else:
             print(f"[Debug] : {self.key} is released.")
