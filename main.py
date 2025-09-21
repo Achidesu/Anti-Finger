@@ -56,14 +56,16 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.light_gray_bg_program = "white" # For the general background or other elements
         self.red_btn = "#ff5656" # Tomato color for the Reset button
         self.hover_red_bt = "#cc4444"
+        self.green_btn = "#34a853"  # Tomato color for the Reset button
+        self.hover_green_bt = "#247539"
         self.white_fg = "#ffffff"
         self.black_fg = "black"
 
         # --- Fonts ---
-        self.font_large_title = ("Sarabun", 30, "bold")
-        self.font_medium_text = ("Sarabun", 25)
+        self.font_large_title = ("Sarabun", 50, "bold")
+        self.font_medium_text = ("Sarabun", 40)
         self.font_timer = ("Sarabun", 50, "bold") # Larger for the timer
-        self.font_pose_text = ("Sarabun", 28, "bold")
+        self.font_pose_text = ("Sarabun", 32, "bold")
 
         # --- Top Bar (Header) ---
         self.top_bar_frame = ctk.CTkFrame(self, fg_color=self.purple_bg, height=150)
@@ -151,16 +153,30 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         self.Label_pose_thai_text = ctk.CTkLabel(self.pose_text_frame, text="ท่าที่ 1", font=self.font_pose_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_pose_thai_text.pack(side="top", pady=(10,0))
-        self.Label_pose_action_text = ctk.CTkLabel(self.pose_text_frame, text="กำมือ", font=self.font_pose_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_pose_action_text = ctk.CTkLabel(self.pose_text_frame, text=f"{self.pose_name[self.current_pose]}", font=self.font_pose_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_pose_action_text.pack(side="top", pady=(0,10))
 
+        # --- Buttons Frame (Middle Column, Bottom) ---
+        self.buttons_frame = ctk.CTkFrame(self.main_content_frame, fg_color=self.light_gray_bg_program)
+        self.buttons_frame.grid(row=2, column=1, columnspan=2, pady=(10, 20), sticky="w")  # <-- จาก n เป็น w
 
-        # --- Reset Button (Middle Column, Bottom) ---
-        self.reset_button = ctk.CTkButton(self.main_content_frame, text="Reset", font=("Sarabun",20),
-                                      fg_color=self.red_btn, text_color=self.white_fg,
-                                      command=self.reset_action,
-                                      height=50, width=200, hover_color=self.hover_red_bt) # Adjust button size
-        self.reset_button.grid(row=2, column=1, padx=20, pady=(10,20), sticky="n") # Align to top of its cell
+        # Start/Stop Button
+        self.start_stop_button = ctk.CTkButton(
+            self.buttons_frame, text="Start", font=("Sarabun", 40),
+            fg_color=self.green_btn, text_color=self.white_fg,
+            command=self.toggle_start_pause,
+            height=35, width=150, hover_color=self.hover_green_bt)
+        self.start_stop_button.pack(side="left", padx=30)
+
+
+        # Reset Button
+        self.reset_button = ctk.CTkButton(
+            self.buttons_frame, text="Reset", font=("Sarabun", 40),
+            fg_color=self.red_btn, text_color=self.white_fg,
+            command=self.reset_action,height=35, width=150, hover_color=self.hover_red_bt)
+        self.reset_button.pack(side="left", padx=10)
+
+
 
 
         # --- Timer Display (Right Column, Top) ---
@@ -455,7 +471,7 @@ class AntiTriggerFingersApp(ctk.CTk):
                 self.set = self.set + 1
                 self.update_round()
 
-            self.after(100, self.check_key_loop)
+            self.after(1000, self.check_key_loop)
 
         else:
             print(f"[Debug] : {self.key} is released.")
@@ -472,6 +488,15 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.update_text()
         self.update_round()
         print("[Debug] : Reset action")
+
+
+
+
+    def toggle_start_pause(self):
+        if self.start_stop_button.cget("text") == "Start":
+            self.start_stop_button.configure(text="Pause",fg_color=self.red_btn,hover_color=self.hover_red_bt)
+        else:
+            self.start_stop_button.configure(text="Start",fg_color=self.green_btn, hover_color=self.hover_green_bt)
 
 
 # Create dummy image files for demonstration if they don't exist
