@@ -1,7 +1,5 @@
 from PIL import Image, ImageTk # Import Pillow for image handling
 import customtkinter as ctk
-import tkinter as tk
-import time
 import threading
 
 class AntiTriggerFingersApp(ctk.CTk):
@@ -78,7 +76,7 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         try:
             logo_image_pil = Image.open("pictures/logo.png")
-            logo_image_pil = logo_image_pil.resize((150, 150), Image.LANCZOS) # Resize logo
+            logo_image_pil = logo_image_pil.resize((150, 150)) # Resize logo
             self.logo_photo = ImageTk.PhotoImage(logo_image_pil)
             self.logo_label = ctk.CTkLabel(self.top_bar_frame, image=self.logo_photo, fg_color=self.purple_bg, text="")
             self.logo_label.pack(side="left", padx=20, pady=10)
@@ -151,7 +149,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.pose_text_frame = ctk.CTkFrame(self.main_content_frame, fg_color=self.light_gray_bg, border_width=1)
         self.pose_text_frame.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
 
-        self.Label_pose_thai_text = ctk.CTkLabel(self.pose_text_frame, text="ท่าที่ 1", font=self.font_pose_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_pose_thai_text = ctk.CTkLabel(self.pose_text_frame, text=f"ท่าที่ {self.current_pose}", font=self.font_pose_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_pose_thai_text.pack(side="top", pady=(10,0))
         self.Label_pose_action_text = ctk.CTkLabel(self.pose_text_frame, text=f"{self.pose_name[self.current_pose]}", font=self.font_pose_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_pose_action_text.pack(side="top", pady=(0,10))
@@ -210,131 +208,94 @@ class AntiTriggerFingersApp(ctk.CTk):
         print("[Debug] : Timer reset!")
         print("[Debug] : Hand position is rested")
 
-    def update_pic(self):
+    def update_pic(self): ## TO DO : PLS FIX IT
         if self.key == "1" and self.current_pose == 1:
-            self.robot_hand_label.destroy()
             robot_hand_image_pil = Image.open(f"pictures/pose_1/1.jpg")  # Assuming 'robot_hand.png'
-            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450))  # Adjust size as needed
             self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
-            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
-            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+            self.robot_hand_label.configure(image=self.robot_hand_photo)
             self.hand_posit = 5
         elif self.key == "2" and self.current_pose == 2:
-            self.robot_hand_label.destroy()
             robot_hand_image_pil = Image.open(f"pictures/pose_2/{self.hand_posit}.jpg")  # Assuming 'robot_hand.png'
-            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450))  # Adjust size as needed
             self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
-            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
-            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+            self.robot_hand_label.configure(image=self.robot_hand_photo)
         elif self.key == "3" and self.current_pose == 3:
-            self.robot_hand_label.destroy()
             robot_hand_image_pil = Image.open(f"pictures/pose_3/{self.hand_posit}.jpg")  # Assuming 'robot_hand.png'
-            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450))  # Adjust size as needed
             self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
-            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
-            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+            self.robot_hand_label.configure(image=self.robot_hand_photo)
         elif self.key == "4" and self.current_pose == 4:
-            self.robot_hand_label.destroy()
             robot_hand_image_pil = Image.open(f"pictures/pose_4/{self.hand_posit}.jpg")  # Assuming 'robot_hand.png'
-            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450))  # Adjust size as needed
             self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
-            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
-            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+            self.robot_hand_label.configure(image=self.robot_hand_photo)
         elif self.key == "5" and self.current_pose == 5:
-            self.robot_hand_label.destroy()
             robot_hand_image_pil = Image.open(f"pictures/pose_5/{self.hand_posit}.jpg")  # Assuming 'robot_hand.png'
-            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+            robot_hand_image_pil = robot_hand_image_pil.resize((400, 450))  # Adjust size as needed
             self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
-            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
-            self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+            self.robot_hand_label.configure(image=self.robot_hand_photo)
         else:
             print("[Debug] : Out of bounds!.")
 
-    def reset_pic(self):
-        self.robot_hand_label.destroy()
+    def reset_pic(self): ## TO DO: WTF IS THIS PLS FIX IT
         robot_hand_image_pil = Image.open(f"pictures/pose_1/1.jpg")  # Assuming 'robot_hand.png'
-        robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS)  # Adjust size as needed
+        robot_hand_image_pil = robot_hand_image_pil.resize((400, 450))  # Adjust size as needed
         self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
-        self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo, text="")
-        self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
+        self.robot_hand_label.configure(image=self.robot_hand_photo)
         self.timer_canvas.delete("progress")
         self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10, tags="progress")
 
-    def update_timer(self):
+    def update_timer(self): # TO DO : Use config instead of delete
         if self.time_current > 0:
             self.progress = (self.time_max - self.time_current) / self.time_max
             self.extent = 360 * self.progress
             print(f"[Debug] : Timer : {self.time_current}")
-            self.timer_canvas.delete(self.timer_text)
             self.timer_canvas.delete("progress")
-            self.timer_text = self.timer_canvas.create_text(100, 100, text=self.time_current, font=self.font_timer,fill=self.black_fg)
+            self.timer_canvas.itemconfig(self.timer_text, text=self.time_current)
             self.timer_canvas.create_arc(10, 10, 190, 190,start=90,outline="#3CB371", width=10,extent=-self.extent,style="arc",tags="progress")
         else:
             print(f"[Debug] : Timer : {self.time_current}")
-            self.timer_canvas.delete(self.timer_text)
-            self.timer_text = self.timer_canvas.create_text(100, 100, text=self.time_current, font=self.font_timer,
-                                                            fill=self.black_fg)
+            self.timer_canvas.itemconfig(self.timer_text, text=self.time_current)
             self.timer_canvas.delete("progress")
             self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10, tags="progress")
 
     def update_round(self):
-        self.Label_set_times_number.destroy()
-        self.Label_set_times_number = ctk.CTkLabel(self.times_line_frame, text=f"{self.round}",font=self.font_medium_text, text_color=self.black_fg,fg_color=self.light_gray_bg)
-        self.Label_set_times_number.pack(side="left", padx=(0, 10))
-        self.Label_set_number.destroy()
-        self.Label_set_number = ctk.CTkLabel(self.sets_line_frame, text=f"{self.set}", font=self.font_medium_text,
-                                             text_color=self.black_fg, fg_color=self.light_gray_bg)
-        self.Label_set_number.pack(side="left", padx=(0, 10))
+        self.Label_set_times_number.configure(text=self.round)
+        self.Label_set_number.configure(text=self.set)
 
     def update_EX_pose(self):
         if self.current_pose == 1:
-            self.small_hand_label.destroy()
             small_hand_image_pil = Image.open("pictures/EX_POSE/pose1.png")  # Assuming 'small_hand.png'
-            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200))  # Adjust size
             self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
-            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
-            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+            self.small_hand_label.configure(image=self.small_hand_photo)
         elif self.current_pose == 2:
-            self.small_hand_label.destroy()
             small_hand_image_pil = Image.open("pictures/EX_POSE/pose2.png")  # Assuming 'small_hand.png'
-            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200))  # Adjust size
             self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
-            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
-            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+            self.small_hand_label.configure(image=self.small_hand_photo)
         elif self.current_pose == 3:
-            self.small_hand_label.destroy()
             small_hand_image_pil = Image.open("pictures/EX_POSE/pose3.png")  # Assuming 'small_hand.png'
-            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200))  # Adjust size
             self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
-            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
-            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+            self.small_hand_label.configure(image=self.small_hand_photo)
         elif self.current_pose == 4:
-            self.small_hand_label.destroy()
             small_hand_image_pil = Image.open("pictures/EX_POSE/pose4.png")  # Assuming 'small_hand.png'
-            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200))  # Adjust size
             self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
-            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
-            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+            self.small_hand_label.configure(image=self.small_hand_photo)
         elif self.current_pose == 5:
-            self.small_hand_label.destroy()
             small_hand_image_pil = Image.open("pictures/EX_POSE/pose5.png")  # Assuming 'small_hand.png'
-            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)  # Adjust size
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200))  # Adjust size
             self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
-            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
-            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0, 20), sticky="n")  # Align to top
+            self.small_hand_label.configure(image=self.small_hand_photo)
         else:
             print("[Debug] Out of bound!")
 
     def update_text(self):
-        self.Label_pose_thai_text.destroy()
-        self.Label_pose_action_text.destroy()
-        self.Label_pose_thai_text = ctk.CTkLabel(self.pose_text_frame, text=f"ท่าที่ {self.current_pose}", font=self.font_pose_text,
-                                                 text_color=self.black_fg, fg_color=self.light_gray_bg)
-        self.Label_pose_thai_text.pack(side="top", pady=(10, 0))
-
-        self.Label_pose_action_text = ctk.CTkLabel(self.pose_text_frame, text=f"{self.pose_name[self.current_pose]}", font=self.font_pose_text,
-                                                   text_color=self.black_fg, fg_color=self.light_gray_bg)
-        self.Label_pose_action_text.pack(side="top", pady=(0, 10))
+        self.Label_pose_thai_text.configure(text=f"ท่าที่ {self.current_pose}")
+        self.Label_pose_action_text.configure(text=f"{self.pose_name[self.current_pose]}")
 
 
     def on_key_press(self, event=None):
@@ -344,6 +305,7 @@ class AntiTriggerFingersApp(ctk.CTk):
             self.check_key_loop()
 
     def on_key_release(self, event=None):
+        self.key = event.char
         self.key_held = False
         self.hand_posit = 0
         self.still_hold = False
