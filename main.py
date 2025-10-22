@@ -175,26 +175,80 @@ class AntiTriggerFingersApp(ctk.CTk):
         # --- Small Pose Image (Right Bottom) ---
         try:
             small_hand_image_pil = Image.open("pictures/EX_POSE/pose1.png") # Assuming 'small_hand.png'
-            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS) # Adjust size
+            small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)
             self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
             self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
-            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0,20), sticky="n") # Align to top
+            self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0,20), sticky="n") 
         except FileNotFoundError:
             self.small_hand_label = ctk.CTkLabel(self.main_content_frame, text="Small Hand\nImage\n(Placeholder)",
                                             font=("THSarabun", 16), bg="lightgray", width=15, height=10)
             self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0,20), sticky="n")
             print("Warning: small_hand.png not found. Using text placeholder.")
+            
+        # --- log ---
+        self.log_button = ctk.CTkButton(self.buttons_frame,text="History",font=("TH Sarabun", 25, "bold"),fg_color="#4285F4",text_color=self.white_fg,
+        command=self.show_history_page,height=50,width=150,hover_color="#3367D6")
+        self.log_button.pack(side="right", padx=130)
         
-        #senserloop
+        # --- History Page ---
+        self.history_page = ctk.CTkFrame(self, fg_color=self.light_gray_bg_program)
+
+        self.history_title = ctk.CTkLabel(self.history_page, text="History Log",font=("TH Sarabun", 50, "bold"), text_color=self.black_fg)
+        self.history_title.pack(pady=20)
+
+        self.history_textbox = ctk.CTkTextbox(self.history_page, width=1000, height=500,font=("TH Sarabun", 28), text_color=self.black_fg)
+        self.history_textbox.pack(padx=40, pady=20)
+
+        self.back_button = ctk.CTkButton(self.history_page, text="Back",font=("TH Sarabun", 40, "bold"), fg_color="#FF9800",text_color="white", hover_color="#E68900",
+        command=self.show_main_page, height=70, width=200)
+        self.back_button.place(x=900, y=500)
+
+
+        #senser loop
         self.running = False
         self.check_sensor_loop()
         
+        # log page
+    def load_history(self):
+        try:
+            with open("Anti-Finger.txt", "r", encoding="utf-8") as f:
+                lines = f.readlines()
+        except FileNotFoundError:
+            lines = ["No history found.\n"]
+
+        max_lines = 14
+        if len(lines) > max_lines:
+            lines = lines[-max_lines:]
+
+        # clear textbox
+        self.history_textbox.configure(state="normal")
+        self.history_textbox.delete("1.0", "end")
+        self.history_textbox.insert("end", "".join(lines))
+        self.history_textbox.see("end")
+        self.history_textbox.configure(state="disabled")
+
+        # recall 2 sec
+        self.after(2000, self.load_history)
+        
+        # show main when dont click log
+    def show_main_page(self):
+        self.history_page.pack_forget()
+        self.main_content_frame.pack(side="top", fill="both", expand=True, pady=20)
+        # show log when click
+    def show_history_page(self):
+        self.main_content_frame.pack_forget()
+        self.history_page.pack(side="top", fill="both", expand=True, pady=20)
+        self.load_history()
+
+        #log text setting
     def write_log(self, message):
-        # Write log to Anti-Finger.txt
         now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        log_message = f"{now} Set {self.set} Round {self.round} : {message}"
+        
         with open("Anti-Finger.txt", "a", encoding="utf-8") as f:
-            f.write(f"{now} {message}\n")
-        print(f"{now} {message}")
+            f.write(log_message + "\n") 
+        
+        print(log_message)
     
         # Read values from MCP3008 (5 channels = 5 fingers)
     def check_fingers(self):
@@ -380,7 +434,7 @@ class AntiTriggerFingersApp(ctk.CTk):
             )
             self.running = True
             self.start_pose_countdown(2)
-            self.write_log("@@@ START @@@")
+            self.write_log("@  START")
         else:
             self.start_stop_button.configure(
                 text="Start",
@@ -388,7 +442,7 @@ class AntiTriggerFingersApp(ctk.CTk):
                 hover_color=self.hover_green_bt
             )
             self.running = False
-            self.write_log("@@@ STOP @@@")
+            self.write_log("@  STOP")
 
 # Function to create dummy images for testing (if real images are missing)
 def create_dummy_images():
