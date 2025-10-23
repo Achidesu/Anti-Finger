@@ -45,21 +45,23 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
         
         # --- UI Colors ---
-        self.purple_bg = "#6a0dad" # A rich purple for the header
-        self.light_gray_bg = "#d9d9d9"  # Light green for the text boxes
-        self.light_gray_bg_program = "white" # For the general background or other elements
-        self.red_btn = "#ff5656" # Tomato color for the Reset button
+        self.purple_bg = "#6a0dad" 
+        self.light_gray_bg = "#d9d9d9"  
+        self.light_gray_bg_program = "white" 
+        self.red_btn = "#ff5656" 
         self.hover_red_bt = "#cc4444"
-        self.green_btn = "#34a853"  # Tomato color for the Reset button
+        self.yellow_btn = "#fbbc05"
+        self.hover_yellow_bt = "#e0a800"
+        self.green_btn = "#34a853" 
         self.hover_green_bt = "#247539"
         self.white_fg = "#ffffff"
         self.black_fg = "black"
         
         # --- Fonts ---
-        self.font_large_title = ("TH Sarabun", 50, "bold")
-        self.font_medium_text = ("TH Sarabun", 45 ,"bold")
-        self.font_timer = ("TH Sarabun", 50, "bold")
-        self.font_pose_text = ("TH Sarabun", 35, "bold")
+        self.font_large_title = ("TH Sarabun", 60, "bold")
+        self.font_medium_text = ("TH Sarabun", 50 ,"bold")
+        self.font_timer = ("TH Sarabun", 60, "bold")
+        self.font_pose_text = ("TH Sarabun", 50, "bold")
         
         # --- Top Bar (Header) ---
         self.top_bar_frame = ctk.CTkFrame(self, fg_color=self.purple_bg, height=150)
@@ -150,15 +152,15 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         # --- Control Buttons (Start/Pause, Reset) ---
         self.buttons_frame = ctk.CTkFrame(self.main_content_frame, fg_color=self.light_gray_bg_program)
-        self.buttons_frame.grid(row=2, column=1, columnspan=2, pady=(10, 20), sticky="w") 
+        self.buttons_frame.grid(row=2, column=1, columnspan=2, padx=(10),pady=(10, 20), sticky="ew") 
 
         # --- Start/Pause ---
-        self.start_stop_button = ctk.CTkButton(self.buttons_frame, text="Start", font=("TH Sarabun", 45, "bold"), 
+        self.start_stop_button = ctk.CTkButton(self.buttons_frame, text="เริ่มต้น", font=("TH Sarabun", 50 ,"bold"), 
         fg_color=self.green_btn, text_color=self.white_fg, 
         command=self.toggle_start_pause, height=80, width=200, hover_color=self.hover_green_bt); self.start_stop_button.pack(side="left", padx=0)
         
         # --- Reset ---
-        self.reset_button = ctk.CTkButton(self.buttons_frame, text="Reset", font=("TH Sarabun", 45, "bold"),
+        self.reset_button = ctk.CTkButton(self.buttons_frame, text="รีเซ็ต", font=("TH Sarabun", 50 ,"bold"),
         fg_color=self.red_btn, text_color=self.white_fg, 
         command=self.reset_action, height=80, width=200,hover_color=self.hover_red_bt); self.reset_button.pack(side="left", padx=10)
 
@@ -186,20 +188,20 @@ class AntiTriggerFingersApp(ctk.CTk):
             print("Warning: small_hand.png not found. Using text placeholder.")
             
         # --- log ---
-        self.log_button = ctk.CTkButton(self.buttons_frame,text="report",font=("TH Sarabun", 45, "bold"),fg_color="#4285F4",text_color=self.white_fg,
+        self.log_button = ctk.CTkButton(self.buttons_frame,text="รายงาน",font=("TH Sarabun", 50 ,"bold"),fg_color="#4285F4",text_color=self.white_fg,
         command=self.show_history_page,height=80, width=200,hover_color="#3367D6")
-        self.log_button.pack(side="right", padx=130)
+        self.log_button.pack(side="right", padx=100)
         
         # --- History Page ---
         self.history_page = ctk.CTkFrame(self, fg_color=self.light_gray_bg_program)
 
-        self.history_title = ctk.CTkLabel(self.history_page, text="report",font=("TH Sarabun", 50, "bold"), text_color=self.black_fg)
+        self.history_title = ctk.CTkLabel(self.history_page, text="รายงานย้อนหลัง",font=("TH Sarabun", 55 ,"bold"), text_color=self.black_fg)
         self.history_title.pack(pady=20)
 
-        self.history_textbox = ctk.CTkTextbox(self.history_page, width=1000, height=500,font=("TH Sarabun", 28), text_color=self.black_fg)
+        self.history_textbox = ctk.CTkTextbox(self.history_page, width=1000, height=500,font=("TH Sarabun", 29 ,"bold"), text_color=self.black_fg)
         self.history_textbox.pack(padx=40, pady=20)
 
-        self.back_button = ctk.CTkButton(self.history_page, text="Back",font=("TH Sarabun", 40, "bold"), fg_color="#FF9800",text_color="white", hover_color="#E68900",
+        self.back_button = ctk.CTkButton(self.history_page, text="กลับ",font=("TH Sarabun", 50 ,"bold"), fg_color="#FF9800",text_color="white", hover_color="#E68900",
         command=self.show_main_page, height=70, width=200)
         self.back_button.place(x=900, y=500)
 
@@ -216,7 +218,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         except FileNotFoundError:
             lines = ["No history found.\n"]
 
-        max_lines = 14
+        max_lines = 13
         if len(lines) > max_lines:
             lines = lines[-max_lines:]
 
@@ -243,7 +245,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         #log text setting
     def write_log(self, message):
         now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        log_message = f"{now} Set {self.set} Round {self.round} : {message}"
+        log_message = f"{now} เซ็ตที่ {self.set} ครั้งที่ {self.round} : {message}"
         
         with open("Anti-Finger.txt", "a", encoding="utf-8") as f:
             f.write(log_message + "\n") 
@@ -419,23 +421,23 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         # reset Start/Stop button
         self.start_stop_button.configure(
-            text="Start",
+            text="เริ่มต้น",
             fg_color=self.green_btn,
             hover_color=self.hover_green_bt
         )
 
     def toggle_start_pause(self):
-        if self.start_stop_button.cget("text") == "Start":
+        if self.start_stop_button.cget("text") == "เริ่มต้น":
             self.start_stop_button.configure(
-                text="Pause",
-                fg_color=self.red_btn,
-                hover_color=self.hover_red_bt
+                text="หยุด",
+                fg_color=self.yellow_btn,
+                hover_color=self.hover_yellow_bt
             )
             self.running = True
             self.start_pose_countdown(2)
         else:
             self.start_stop_button.configure(
-                text="Start",
+                text="เริ่มต้น",
                 fg_color=self.green_btn,
                 hover_color=self.hover_green_bt
             )
