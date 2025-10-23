@@ -186,14 +186,14 @@ class AntiTriggerFingersApp(ctk.CTk):
             print("Warning: small_hand.png not found. Using text placeholder.")
             
         # --- log ---
-        self.log_button = ctk.CTkButton(self.buttons_frame,text="History",font=("TH Sarabun", 25, "bold"),fg_color="#4285F4",text_color=self.white_fg,
-        command=self.show_history_page,height=50,width=150,hover_color="#3367D6")
+        self.log_button = ctk.CTkButton(self.buttons_frame,text="report",font=("TH Sarabun", 45, "bold"),fg_color="#4285F4",text_color=self.white_fg,
+        command=self.show_history_page,height=80, width=200,hover_color="#3367D6")
         self.log_button.pack(side="right", padx=130)
         
         # --- History Page ---
         self.history_page = ctk.CTkFrame(self, fg_color=self.light_gray_bg_program)
 
-        self.history_title = ctk.CTkLabel(self.history_page, text="History Log",font=("TH Sarabun", 50, "bold"), text_color=self.black_fg)
+        self.history_title = ctk.CTkLabel(self.history_page, text="report",font=("TH Sarabun", 50, "bold"), text_color=self.black_fg)
         self.history_title.pack(pady=20)
 
         self.history_textbox = ctk.CTkTextbox(self.history_page, width=1000, height=500,font=("TH Sarabun", 28), text_color=self.black_fg)
@@ -382,7 +382,7 @@ class AntiTriggerFingersApp(ctk.CTk):
                     self.update_timer()
 
                 if self.time_current <= 0:
-                    self.write_log(f" Pose = {self.current_pose} Success!") 
+                    self.write_log(f"ท่า{self.pose_name[self.current_pose]}สําเร็จ!")
                     self.current_pose += 1
                     if self.current_pose > 5:
                         self.current_pose = 1
@@ -423,7 +423,6 @@ class AntiTriggerFingersApp(ctk.CTk):
             fg_color=self.green_btn,
             hover_color=self.hover_green_bt
         )
-        self.write_log("!!! Reset All !!!")
 
     def toggle_start_pause(self):
         if self.start_stop_button.cget("text") == "Start":
@@ -434,7 +433,6 @@ class AntiTriggerFingersApp(ctk.CTk):
             )
             self.running = True
             self.start_pose_countdown(2)
-            self.write_log("@  START")
         else:
             self.start_stop_button.configure(
                 text="Start",
@@ -442,7 +440,6 @@ class AntiTriggerFingersApp(ctk.CTk):
                 hover_color=self.hover_green_bt
             )
             self.running = False
-            self.write_log("@  STOP")
 
 # Function to create dummy images for testing (if real images are missing)
 def create_dummy_images():
