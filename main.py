@@ -5,6 +5,7 @@ import Adafruit_GPIO.SPI as SPI
 import Adafruit_MCP3008             # Library for MCP3008 ADC
 import time
 from datetime import datetime
+from playsound import playsound
 
 # Main Application Class
 class AntiTriggerFingersApp(ctk.CTk):
@@ -221,24 +222,24 @@ class AntiTriggerFingersApp(ctk.CTk):
         
     def play_sounds_sequential(self, filenames):
         def _play_sequence():
-            for filename in filenames:
-                try:
-                    print(f"[Sound] Playing: {filename}")
-                    playsound(filename)
-                except Exception as e:
-                    print(f"Sound error: {e}")
-        threading.Thread(target=_play_sequence, daemon=True).start()
-
-    def play_sound_thread(self, filename):
-        def _play():
+            filename = f"Voices/{filenames}"
             try:
-                pygame.mixer.music.load(filename)
-                pygame.mixer.music.play()   
-                while pygame.mixer.music.get_busy():
-                    pygame.time.wait(100)
+                print(f"[Sound] Playing: {filename}")
+                playsound(filename)
             except Exception as e:
                 print(f"Sound error: {e}")
-        threading.Thread(target=_play, daemon=True).start()
+        threading.Thread(target=_play_sequence, daemon=True).start()
+
+    # def play_sound_thread(self, filename):
+    #     def _play():
+    #         try:
+    #             pygame.mixer.music.load(filename)
+    #             pygame.mixer.music.play()   
+    #             while pygame.mixer.music.get_busy():
+    #                 pygame.time.wait(100)
+    #         except Exception as e:
+    #             print(f"Sound error: {e}")
+    #     threading.Thread(target=_play, daemon=True).start()
 
         
         # log page
@@ -267,11 +268,11 @@ class AntiTriggerFingersApp(ctk.CTk):
     def show_main_page(self):
         self.history_page.pack_forget()
         self.main_content_frame.pack(side="top", fill="both", expand=True, pady=20)
-        self.play_sound_thread("010.mp3")
+        self.play_sounds_sequential("010.mp3")
         # show log when click
     def show_history_page(self):
         self.main_content_frame.pack_forget()
-        self.play_sound_thread("009.mp3")
+        self.play_sounds_sequential("009.mp3")
         self.history_page.pack(side="top", fill="both", expand=True, pady=20)
         self.load_history()
         
@@ -430,13 +431,13 @@ class AntiTriggerFingersApp(ctk.CTk):
                     self.timer_reset()
                     self.update_EX_pose()
                     self.update_text()
-                    self.play_sounds_sequential(self.pose_sounds[self.current_pose])
+                    self.play_sounds_sequential(f"{self.pose_sounds[self.current_pose]}.mp3")
             self.after(1000, self.check_sensor_loop)
 
         # Reset all values to default
     def reset_action(self):
         print("[Debug] : Reset action")
-        self.play_sound_thread("008.mp3")
+        self.play_sounds_sequential("008.mp3")
         # reset value
         self.round = 0
         self.set = 0
@@ -466,12 +467,11 @@ class AntiTriggerFingersApp(ctk.CTk):
             self.start_stop_button.configure(text="หยุด",fg_color=self.yellow_btn,hover_color=self.hover_yellow_bt)
             self.running = True
             self.start_pose_countdown(2)
-            self.play_sound_thread("006.mp3")
-            self.after(1500, lambda: self.play_sound_thread("001.mp3"))
+            self.play_sounds_sequential("006.mp3")
         else:
             self.start_stop_button.configure(text="เริ่มต้น",fg_color=self.green_btn,hover_color=self.hover_green_bt)
             self.running = False
-            self.play_sound_thread("007.mp3")
+            self.play_sounds_sequential("007.mp3")
 
 # Function to create dummy images for testing (if real images are missing)
 def create_dummy_images():
