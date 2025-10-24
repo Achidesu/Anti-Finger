@@ -5,6 +5,7 @@ import Adafruit_GPIO.SPI as SPI
 import Adafruit_MCP3008             # Library for MCP3008 ADC
 import time
 from datetime import datetime
+import pygame
 from playsound import playsound
 
 # Main Application Class
@@ -219,28 +220,24 @@ class AntiTriggerFingersApp(ctk.CTk):
             5: ["005.mp3"]
         }
         
+        try:
+            pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+            print("[Debug] pygame mixer initialized")
+        except Exception as e:
+            print(f"[Sound] Pygame mixer init error: {e}")
         
-    def play_sounds_sequential(self, filenames):
-        def _play_sequence():
-            filename = f"Voices/{filenames}"
+    def play_sounds_sequential(self, filename):
+        def _play(f=filename):
             try:
-                print(f"[Sound] Playing: {filename}")
-                playsound(filename)
+                if not f.endswith(".mp3"):
+                    f += ".mp3"
+                sound_path = f"Voices/{f}"
+                print(f"[Sound] Playing: {sound_path}")
+                sound = pygame.mixer.Sound(sound_path)
+                sound.play()
             except Exception as e:
                 print(f"Sound error: {e}")
-        threading.Thread(target=_play_sequence, daemon=True).start()
-
-    # def play_sound_thread(self, filename):
-    #     def _play():
-    #         try:
-    #             pygame.mixer.music.load(filename)
-    #             pygame.mixer.music.play()   
-    #             while pygame.mixer.music.get_busy():
-    #                 pygame.time.wait(100)
-    #         except Exception as e:
-    #             print(f"Sound error: {e}")
-    #     threading.Thread(target=_play, daemon=True).start()
-
+        threading.Thread(target=_play, daemon=True).start()
         
         # log page
     def load_history(self):
@@ -431,7 +428,8 @@ class AntiTriggerFingersApp(ctk.CTk):
                     self.timer_reset()
                     self.update_EX_pose()
                     self.update_text()
-                    self.play_sounds_sequential(f"{self.pose_sounds[self.current_pose]}.mp3")
+                    sound_file = self.pose_sounds[self.current_pose][0]
+                    self.play_sounds_sequential(sound_file)
             self.after(1000, self.check_sensor_loop)
 
         # Reset all values to default
@@ -468,6 +466,8 @@ class AntiTriggerFingersApp(ctk.CTk):
             self.running = True
             self.start_pose_countdown(2)
             self.play_sounds_sequential("006.mp3")
+            if self.current_pose == 1:
+                self.after(1500, lambda: self.play_sounds_sequential(self.pose_sounds[self.current_pose][0]))
         else:
             self.start_stop_button.configure(text="เริ่มต้น",fg_color=self.green_btn,hover_color=self.hover_green_bt)
             self.running = False
