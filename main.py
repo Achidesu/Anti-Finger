@@ -198,7 +198,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.history_title = ctk.CTkLabel(self.history_page, text="รายงานย้อนหลัง",font=("TH Sarabun", 55 ,"bold"), text_color=self.black_fg)
         self.history_title.pack(pady=20)
 
-        self.history_textbox = ctk.CTkTextbox(self.history_page, width=1000, height=500,font=("TH Sarabun", 29 ,"bold"), text_color=self.black_fg)
+        self.history_textbox = ctk.CTkTextbox(self.history_page, width=1000, height=500,font=("TH Sarabun", 28 ,"bold"), text_color=self.black_fg)
         self.history_textbox.pack(padx=40, pady=20)
 
         self.back_button = ctk.CTkButton(self.history_page, text="กลับ",font=("TH Sarabun", 50 ,"bold"), fg_color="#FF9800",text_color="white", hover_color="#E68900",
@@ -209,6 +209,37 @@ class AntiTriggerFingersApp(ctk.CTk):
         #senser loop
         self.running = False
         self.check_sensor_loop()
+        
+        self.pose_sounds = {
+            1: ["001.mp3"],
+            2: ["002.mp3"],
+            3: ["003.mp3"],
+            4: ["004.mp3"],
+            5: ["005.mp3"]
+        }
+        
+        
+    def play_sounds_sequential(self, filenames):
+        def _play_sequence():
+            for filename in filenames:
+                try:
+                    print(f"[Sound] Playing: {filename}")
+                    playsound(filename)
+                except Exception as e:
+                    print(f"Sound error: {e}")
+        threading.Thread(target=_play_sequence, daemon=True).start()
+
+    def play_sound_thread(self, filename):
+        def _play():
+            try:
+                pygame.mixer.music.load(filename)
+                pygame.mixer.music.play()   
+                while pygame.mixer.music.get_busy():
+                    pygame.time.wait(100)
+            except Exception as e:
+                print(f"Sound error: {e}")
+        threading.Thread(target=_play, daemon=True).start()
+
         
         # log page
     def load_history(self):
@@ -236,11 +267,14 @@ class AntiTriggerFingersApp(ctk.CTk):
     def show_main_page(self):
         self.history_page.pack_forget()
         self.main_content_frame.pack(side="top", fill="both", expand=True, pady=20)
+        self.play_sound_thread("010.mp3")
         # show log when click
     def show_history_page(self):
         self.main_content_frame.pack_forget()
+        self.play_sound_thread("009.mp3")
         self.history_page.pack(side="top", fill="both", expand=True, pady=20)
         self.load_history()
+        
 
         #log text setting
     def write_log(self, message):
@@ -382,7 +416,6 @@ class AntiTriggerFingersApp(ctk.CTk):
                 if self.hand_posit == 5 and self.time_current > 0 and not self.still_hold:
                     self.time_current -= 1
                     self.update_timer()
-
                 if self.time_current <= 0:
                     self.write_log(f"ท่า{self.pose_name[self.current_pose]}สําเร็จ!")
                     self.current_pose += 1
@@ -397,11 +430,13 @@ class AntiTriggerFingersApp(ctk.CTk):
                     self.timer_reset()
                     self.update_EX_pose()
                     self.update_text()
+                    self.play_sounds_sequential(self.pose_sounds[self.current_pose])
             self.after(1000, self.check_sensor_loop)
 
         # Reset all values to default
     def reset_action(self):
         print("[Debug] : Reset action")
+        self.play_sound_thread("008.mp3")
         # reset value
         self.round = 0
         self.set = 0
@@ -428,20 +463,15 @@ class AntiTriggerFingersApp(ctk.CTk):
 
     def toggle_start_pause(self):
         if self.start_stop_button.cget("text") == "เริ่มต้น":
-            self.start_stop_button.configure(
-                text="หยุด",
-                fg_color=self.yellow_btn,
-                hover_color=self.hover_yellow_bt
-            )
+            self.start_stop_button.configure(text="หยุด",fg_color=self.yellow_btn,hover_color=self.hover_yellow_bt)
             self.running = True
             self.start_pose_countdown(2)
+            self.play_sound_thread("006.mp3")
+            self.after(1500, lambda: self.play_sound_thread("001.mp3"))
         else:
-            self.start_stop_button.configure(
-                text="เริ่มต้น",
-                fg_color=self.green_btn,
-                hover_color=self.hover_green_bt
-            )
+            self.start_stop_button.configure(text="เริ่มต้น",fg_color=self.green_btn,hover_color=self.hover_green_bt)
             self.running = False
+            self.play_sound_thread("007.mp3")
 
 # Function to create dummy images for testing (if real images are missing)
 def create_dummy_images():
