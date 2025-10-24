@@ -56,11 +56,11 @@ The main application class, inheriting from `ctk.CTk`.
 
 **Timer & UI Updates**
 - `timer_reset()` >>> Reset hand position and timer to default
-- `update_timer()` ? Draws a circular timer on the canvas
+- `update_timer()` >>> Draws a circular timer on the canvas
 - `update_pic()` >>> Updates large robot hand image based on current pose and step
 - `update_EX_pose()` >>> Updates small reference hand image based on the current pose
 - `update_text()` >>> Updates pose labels
-- Countdown Before Starting: `start_pose_countdown(count=2)` ? Waits 2 seconds before starting the monitoring loop
+- Countdown Before Starting: `start_pose_countdown(count=2)` >>> Waits 2 seconds before starting the monitoring loop
 
 **Sensor Monitoring Loop**
 - `check_sensor_loop()` >>> Runs repeatedly if `self.running` is `True`
