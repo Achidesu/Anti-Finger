@@ -33,13 +33,8 @@ with open(FILE_PATH, "w", encoding="utf-8") as f:
                     seconds_passed = ((rep_index - 1) * len(exercises) + pose_index) * 7
                     timestamp = day + timedelta(seconds=seconds_passed)
                     
-                    line = f"[{timestamp.strftime('%Y-%m-%d %H:%M:%S')}] เซ็ตที่ {set_index} ครั้งที่ {rep_index} :\n"
+                    line = f"[{timestamp.strftime('%Y-%m-%d %H:%M:%S')}] เซ็ตที่ {set_index} ครั้งที่ {rep_index} : {exercise}\n"
                     f.write(line)
-                
-                # เพิ่มบรรทัดว่างหลังครบ 5 ท่า (คือครบ 1 ครั้ง)
-                f.write("\n")
-            
-            # เพิ่มบรรทัดว่างหลังครบ 1 เซ็ต
-            f.write("=" * 60 + "\n\n")
+
 
 print(f"สร้างไฟล์ {FILE_PATH} เสร็จเรียบร้อย!")
