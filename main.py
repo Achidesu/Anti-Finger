@@ -8,6 +8,7 @@ from datetime import datetime
 import pygame
 from playsound import playsound
 import os
+import math, time as _time
 
 # Main Application Class
 class AntiTriggerFingersApp(ctk.CTk):
@@ -45,7 +46,12 @@ class AntiTriggerFingersApp(ctk.CTk):
         # --- Initialize MCP3008 ADC ---
         SPI_PORT   = 0
         SPI_DEVICE = 0
-        self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
+        try:
+            self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
+        except Exception as e:
+            # fallback: set self.mcp to None so code won't crash during dev without ADC
+            print(f"[ADC] init error: {e}. Running without MCP3008.")
+            self.mcp = None
         
         # --- UI Colors ---
         self.purple_bg = "#6a0dad" 
@@ -477,29 +483,30 @@ class AntiTriggerFingersApp(ctk.CTk):
         print("[Debug] Countdown started")
 
     def _animate_countdown(self):
-        """วาดวงกลมสีส้มหมุนรอบๆ พร้อมตัวเลขนับถอยหลัง"""
         if not getattr(self, "countdown_active", False):
             return
 
-        import math, time as _time
         now = _time.time()
         remaining = self.countdown_end_time - now
 
-        # ===== เมื่อ countdown จบ =====
         if remaining <= 0:
             self.countdown_active = False
             self.countdown_job = None
+            # set running True 
             self.running = True
             print("[Debug] Countdown finished, start running")
-            # คืนวงกลมสีเขียวปกติ
+
             self.timer_canvas.delete("progress")
             l = self.timer_pad
             r = self.timer_canvas_size - self.timer_pad
             self.timer_canvas.create_oval(l, l, r, r,
                                           outline="#3CB371", width=10, tags="progress")
             self.timer_canvas.itemconfig(self.timer_text, text=str(self.time_current))
+            try:
+                self.check_sensor_loop()
+            except Exception as e:
+                print(f"[countdown] error starting sensor loop: {e}")
             return
-
         # ===== วาดวงกลมส้มขณะนับถอยหลัง =====
         frac = max(0.0, min(1.0, remaining / float(self.countdown_total)))
         extent = 360 * frac
