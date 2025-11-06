@@ -1,14 +1,14 @@
 from PIL import Image, ImageTk      # Import Pillow for handling images
 import customtkinter as ctk         # CustomTkinter for modern Tkinter UI
-import threading         
-import Adafruit_GPIO.SPI as SPI
-import Adafruit_MCP3008             # Library for MCP3008 ADC
+import threading
+#import Adafruit_GPIO.SPI as SPI
+#import Adafruit_MCP3008             # Library for MCP3008 ADC
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import pygame
 from playsound import playsound
 import os
-import math, time as _time
+import re
 
 # Main Application Class
 class AntiTriggerFingersApp(ctk.CTk):
@@ -46,12 +46,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         # --- Initialize MCP3008 ADC ---
         SPI_PORT   = 0
         SPI_DEVICE = 0
-        try:
-            self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
-        except Exception as e:
-            # fallback: set self.mcp to None so code won't crash during dev without ADC
-            print(f"[ADC] init error: {e}. Running without MCP3008.")
-            self.mcp = None
+        #self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
         
         # --- UI Colors ---
         self.purple_bg = "#6a0dad" 
@@ -164,41 +159,24 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.buttons_frame.grid(row=2, column=1, columnspan=2, padx=(10),pady=(10, 20), sticky="ew") 
 
         # --- Start/Pause ---
-        self.start_stop_button = ctk.CTkButton(self.buttons_frame,text="เริ่มต้น",font=("TH Sarabun", 50, "bold"),fg_color=self.green_btn,text_color=self.white_fg,
-            command=self.toggle_start_pause,height=80,width=200,hover_color=self.hover_green_bt)
-        self.start_stop_button.pack(side="left", padx=0)
-
+        self.start_stop_button = ctk.CTkButton(self.buttons_frame, text="เริ่มต้น", font=("TH Sarabun", 50 ,"bold"), 
+        fg_color=self.green_btn, text_color=self.white_fg, 
+        command=self.toggle_start_pause, height=80, width=200, hover_color=self.hover_green_bt); self.start_stop_button.pack(side="left", padx=0)
+        
         # --- Reset ---
         self.reset_button = ctk.CTkButton(self.buttons_frame, text="รีเซ็ต", font=("TH Sarabun", 50 ,"bold"),
         fg_color=self.red_btn, text_color=self.white_fg, 
         command=self.reset_action, height=80, width=200,hover_color=self.hover_red_bt); self.reset_button.pack(side="left", padx=10)
 
-        # --------------------------------------------------------------------
-        # Right column top: Timer circle + animated progress arc
-        # --------------------------------------------------------------------
+        # --- Timer Circle (Right Top) ---
         self.timer_frame = ctk.CTkFrame(self.main_content_frame, fg_color=self.white_fg)
-        self.timer_frame.grid(row=0, column=2, padx=20, pady=20, sticky="n")
-        self.timer_canvas_size = 260
-        self.timer_pad = 10
-        self.timer_canvas = ctk.CTkCanvas(
-            self.timer_frame, width=self.timer_canvas_size, height=self.timer_canvas_size, bg=self.white_fg, highlightthickness=0
-        )
-        self.timer_canvas.pack()
-        left = self.timer_pad
-        top = self.timer_pad
-        right = self.timer_canvas_size - self.timer_pad
-        bottom = self.timer_canvas_size - self.timer_pad
-        # draw initial neutral circle
-        self.timer_canvas.create_oval(left, top, right, bottom, outline="#3CB371", width=10, tags="progress")
-        center = self.timer_canvas_size // 2
-        self.timer_text = self.timer_canvas.create_text(center, center, text=f"{self.time_current}", font=self.font_timer, fill=self.black_fg)
+        self.timer_frame.grid(row=0, column=2, padx=20, pady=20, sticky="n") # Sticky "n" to align to top
 
-        # Timer animation bookkeeping variables (used by _animate_timer)
-        self.timer_anim_job = None
-        self._timer_anim_from = 0.0
-        self._timer_anim_to = 0.0
-        self._timer_anim_start = 0.0
-        self._timer_anim_duration = 0.0
+        self.timer_canvas = ctk.CTkCanvas(self.timer_frame, width=200, height=200, bg=self.white_fg, highlightthickness=0)
+        self.timer_canvas.pack()
+
+        self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10,tags="progress") # MediumSeaGreen
+        self.timer_text = self.timer_canvas.create_text(100, 100, text=f"{self.time_current}", font=self.font_timer, fill=self.black_fg)
 
         # --- Small Pose Image (Right Bottom) ---
         try:
@@ -235,6 +213,9 @@ class AntiTriggerFingersApp(ctk.CTk):
         #senser loop
         self.running = False
         self.check_sensor_loop()
+        self.last_update_time = time.time()
+        self.animation_interval = 50  # อัปเดตทุก 50 มิลลิวินาที (0.05 วินาที)
+        self.time_remaining = self.time_max
         
         self.pose_sounds = {
             1: ["001.mp3"],
@@ -251,15 +232,14 @@ class AntiTriggerFingersApp(ctk.CTk):
             print(f"[Sound] Pygame mixer init error: {e}")
         
     def play_sounds_sequential(self, filename):
-        """Play a short sound file from Voices/ on a daemon thread."""
         def _play(f=filename):
             try:
                 if not f.endswith(".mp3"):
                     f += ".mp3"
                 sound_path = f"Voices/{f}"
-                if os.path.exists(sound_path):
-                    sound = pygame.mixer.Sound(sound_path)
-                    sound.play()
+                print(f"[Sound] Playing: {sound_path}")
+                sound = pygame.mixer.Sound(sound_path)
+                sound.play()
             except Exception as e:
                 print(f"Sound error: {e}")
         threading.Thread(target=_play, daemon=True).start()
@@ -272,18 +252,51 @@ class AntiTriggerFingersApp(ctk.CTk):
         except FileNotFoundError:
             lines = ["No history found.\n"]
 
-        max_lines = 1000000000000
+        max_lines = 100000
         if len(lines) > max_lines:
             lines = lines[-max_lines:]
 
+        # clear textbox
         self.history_textbox.configure(state="normal")
         self.history_textbox.delete("1.0", "end")
         self.history_textbox.insert("end", "".join(lines))
         self.history_textbox.see("end")
         self.history_textbox.configure(state="disabled")
-
+        
         # recall 2 sec
         self.after(2000, self.load_history)
+
+    def clean_old_logs(self, file_path="Anti-Finger.txt", days=7):
+        """ลบเฉพาะบรรทัด log ที่เก่ากว่า X วัน"""
+        if not os.path.exists(file_path):
+            return
+
+        cutoff = datetime.now() - timedelta(days=days)
+        new_lines = []
+
+        # รูปแบบวันที่: [YYYY-MM-DD HH:MM:SS]
+        pattern = re.compile(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]")
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                match = pattern.search(line)
+                if match:
+                    date_str = match.group(1)
+                    try:
+                        log_time = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+                        if log_time >= cutoff:
+                            new_lines.append(line)
+                    except ValueError:
+                        # ถ้า format ไม่ตรง จะไม่ลบ
+                        new_lines.append(line)
+                else:
+                    new_lines.append(line)
+
+        # เขียนกลับเฉพาะบรรทัดที่ยังไม่เก่าเกิน
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.writelines(new_lines)
+
+        print(f"[Log Cleanup] ลบ log ที่เก่ากว่า {days} วันเรียบร้อยแล้ว")
         
         # show main when dont click log
     def show_main_page(self):
@@ -296,8 +309,8 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.play_sounds_sequential("009.mp3")
         self.history_page.pack(side="top", fill="both", expand=True, pady=20)
         self.load_history()
+        self.clean_old_logs()
         
-
         #log text setting
     def write_log(self, message):
         now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
@@ -318,7 +331,9 @@ class AntiTriggerFingersApp(ctk.CTk):
         # Reset timer back to max/hand position
     def timer_reset(self):
         self.time_current = self.time_max
+        self.time_remaining = self.time_max  # รีเซ็ตเวลาสำหรับอนิเมชัน
         self.hand_posit = 0
+        self.last_update_time = time.time()  # รีเซ็ตเวลาอ้างอิง
         self.update_timer()
         self.reset_pic()
         print("[Debug] : Timer reset!")
@@ -347,75 +362,21 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10, tags="progress")
 
         # Update the timer UI
-    def update_timer(self):
-        try:
-            prev_time = self.time_current + 1
-            from_prog = max(0.0, min(1.0, (self.time_max - prev_time) / float(self.time_max)))
-            to_prog = max(0.0, min(1.0, (self.time_max - self.time_current) / float(self.time_max)))
-
-            self._stop_timer_animation()
-
-            self._timer_prev_sec = prev_time
-            self._timer_anim_from = from_prog
-            self._timer_anim_to = to_prog
-            self._timer_anim_start = time.time()
-            self._timer_anim_duration = 1.0
-            self.timer_anim_job = self.after(0, self._animate_timer)
-        except Exception as e:
-            print(f"[update_timer] {e}")
-
-    def _animate_timer(self):
-        try:
-            now = time.time()
-            elapsed = now - self._timer_anim_start
-            t = min(1.0, max(0.0, elapsed / float(self._timer_anim_duration)))
-            progress = self._timer_anim_from + (self._timer_anim_to - self._timer_anim_from) * t
-            extent = 360 * progress
-
+    def update_timer(self): 
+        if self.time_remaining > 0:
+            # คำนวณความคืบหน้า
+            self.progress = (self.time_max - self.time_remaining) / self.time_max
+            self.extent = 360 * self.progress
+            
+            # อัปเดต UI
             self.timer_canvas.delete("progress")
-            l = self.timer_pad
-            r = self.timer_canvas_size - self.timer_pad
-            self.timer_canvas.create_arc(l, l, r, r, start=-90, extent=-extent, style="arc", width=10, outline="#3CB371", tags="progress")
-
-            try:
-                prev = getattr(self, "_timer_prev_sec", self.time_current + 1)
-                interp = prev + (self.time_current - prev) * t
-                interp = max(float(self.time_current), min(float(prev), interp))
-                secs = int(__import__("math").ceil(interp))
-            except Exception:
-                secs = int(max(0, self.time_current))
-            self.timer_canvas.itemconfig(self.timer_text, text=str(secs))
-
-            if t < 1.0:
-                self.timer_anim_job = self.after(50, self._animate_timer)
-            else:
-                self.timer_anim_job = None
-                self.timer_canvas.delete("progress")
-                l = self.timer_pad
-                r = self.timer_canvas_size - self.timer_pad
-                self.timer_canvas.create_arc(l, l, r, r, start=-90, extent=-360 * self._timer_anim_to, style="arc", width=10, outline="#3CB371", tags="progress")
-                self.timer_canvas.itemconfig(self.timer_text, text=str(self.time_current))
-        except Exception as e:
-            print(f"[_animate_timer] {e}")
-            self.timer_anim_job = None
-
-    def _stop_timer_animation(self):
-        try:
-            if self.timer_anim_job:
-                try:
-                    self.after_cancel(self.timer_anim_job)
-                except Exception:
-                    pass
-                self.timer_anim_job = None
-            progress = (self.time_max - self.time_current) / float(self.time_max) if self.time_max else 0.0
-            extent = 360 * progress
+            self.timer_canvas.itemconfig(self.timer_text, text=str(int(self.time_remaining)))
+            self.timer_canvas.create_arc(10, 10, 190, 190, start=90, outline="#3CB371", 
+                                    width=10, extent=-self.extent, style="arc", tags="progress")
+        else:
+            self.timer_canvas.itemconfig(self.timer_text, text="0")
             self.timer_canvas.delete("progress")
-            l = self.timer_pad
-            r = self.timer_canvas_size - self.timer_pad
-            self.timer_canvas.create_arc(l, l, r, r, start=-90, extent=-extent, style="arc", width=10, outline="#3CB371", tags="progress")
-            self.timer_canvas.itemconfig(self.timer_text, text=str(self.time_current))
-        except Exception as e:
-            print(f"[_stop_timer_animation] {e}")
+            self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10, tags="progress")
 
         # Update round/set labels
     def update_round(self):
@@ -458,111 +419,58 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.Label_pose_action_text.configure(text=f"{self.pose_name[self.current_pose] }")
 
         # Countdown before starting
-    def toggle_start_pause(self):
-        if self.start_stop_button.cget("text") == "เริ่มต้น":
-            self.start_stop_button.configure(text="หยุด", fg_color=self.yellow_btn, hover_color=self.hover_yellow_bt)
-            self.start_pose_countdown(2)
-            self.play_sounds_sequential("006.mp3")
-        else:
-            self.start_stop_button.configure(text="เริ่มต้น", fg_color=self.green_btn, hover_color=self.hover_green_bt)
-            self.running = False
-            self._cancel_countdown()
-            self.play_sounds_sequential("007.mp3")
+    def start_pose_countdown(self, count=3):
+        def countdown_thread():
+            total_time = count  # เช่น 3 วินาที
+            start_time = time.time()
+            end_time = start_time + total_time
+            step_time = 0.02  # อัปเดตทุก 0.02 วินาที (50 FPS)
 
-    def start_pose_countdown(self, seconds: int):
-        """เริ่มการนับถอยหลังก่อนเริ่ม"""
-        try:
-            self._cancel_countdown()  # ยกเลิกของเก่า (ถ้ามี)
-        except Exception:
-            pass
-        self.countdown_active = True
-        self.countdown_total = max(1, seconds)
-        self.countdown_end_time = time.time() + self.countdown_total
-        # เริ่ม animation frame แรก
-        self.countdown_job = self.after(0, self._animate_countdown)
-        print("[Debug] Countdown started")
+            while self.running and time.time() < end_time:
+                elapsed = time.time() - start_time
+                remaining = max(0, total_time - elapsed)
 
-    def _animate_countdown(self):
-        if not getattr(self, "countdown_active", False):
-            return
+                # คำนวณ progress รวมทั้งหมด 0 → 360°
+                progress = (elapsed / total_time) * 360
 
-        now = _time.time()
-        remaining = self.countdown_end_time - now
+                # วาดวงกลมเหลืองที่ค่อย ๆ หมุน
+                self.timer_canvas.delete("progress")
+                self.timer_canvas.create_arc(
+                    10, 10, 190, 190,
+                    start=90,
+                    outline="#FFD700",  # สีทอง
+                    width=10,
+                    extent=-progress,
+                    style="arc",
+                    tags="progress"
+                )
 
-        if remaining <= 0:
-            self.countdown_active = False
-            self.countdown_job = None
-            # set running True 
-            self.running = True
-            print("[Debug] Countdown finished, start running")
+                # แสดงเลข countdown ให้ครบทุกวินาที
+                number = int(remaining) + 1 if remaining > 0.2 else 0
+                self.timer_canvas.itemconfig(self.timer_text, text=str(number if number > 0 else ""))
 
-            self.timer_canvas.delete("progress")
-            l = self.timer_pad
-            r = self.timer_canvas_size - self.timer_pad
-            self.timer_canvas.create_oval(l, l, r, r,
-                                          outline="#3CB371", width=10, tags="progress")
-            self.timer_canvas.itemconfig(self.timer_text, text=str(self.time_current))
-            try:
-                self.check_sensor_loop()
-            except Exception as e:
-                print(f"[countdown] error starting sensor loop: {e}")
-            return
-        # ===== วาดวงกลมส้มขณะนับถอยหลัง =====
-        frac = max(0.0, min(1.0, remaining / float(self.countdown_total)))
-        extent = 360 * frac
-        self.timer_canvas.delete("progress")
-        l = self.timer_pad
-        r = self.timer_canvas_size - self.timer_pad
-        self.timer_canvas.create_arc(
-            l, l, r, r, start=-90, extent=-extent,
-            style="arc", width=10, outline="#FFA500", tags="progress"
-        )
-        secs = int(math.ceil(remaining))
-        self.timer_canvas.itemconfig(self.timer_text, text=str(secs))
+                time.sleep(step_time)
 
-        # เรียกตัวเองซ้ำทุก 50 ms เพื่ออัปเดตภาพ
-        self.countdown_job = self.after(50, self._animate_countdown)
+            if self.running:
+                # Countdown จบ → เปลี่ยนเป็นสีเขียวแล้วเริ่มจับเวลา
+                self.timer_canvas.delete("progress")
+                self.timer_canvas.create_oval(
+                    10, 10, 190, 190,
+                    outline="#3CB371", width=10, tags="progress"
+                )
+                self.timer_canvas.itemconfig(self.timer_text, text=str(self.time_max))
 
-    def _cancel_countdown(self):
-        """ยกเลิก countdown และคืนวงกลมเขียว"""
-        if getattr(self, "countdown_active", False):
-            self.countdown_active = False
-            if getattr(self, "countdown_job", None):
-                try:
-                    self.after_cancel(self.countdown_job)
-                except Exception:
-                    pass
-            self.countdown_job = None
+                print("[Debug] : Countdown finished → Start main loop")
+                self.hand_posit = 0
+                self.time_current = self.time_max
+                self.time_remaining = self.time_max
+                self.last_update_time = time.time()
+                self.update_timer()
 
-        self.timer_canvas.delete("progress")
-        l = self.timer_pad
-        r = self.timer_canvas_size - self.timer_pad
-        self.timer_canvas.create_oval(
-            l, l, r, r, outline="#3CB371", width=10, tags="progress"
-        )
-        self.timer_canvas.itemconfig(self.timer_text, text=str(self.time_current))
-        # Reset all values to default
-    def reset_action(self):
-        self.running = False
-        try:
-            self._cancel_countdown()
-        except Exception:
-            pass
+                # เริ่ม loop sensor หลัง countdown จบ 1 วิ
+                self.after(1000, self.check_sensor_loop)
 
-        self.start_stop_button.configure(text="เริ่มต้น", fg_color=self.green_btn, hover_color=self.hover_green_bt)
-        self.round = 0
-        self.set = 0
-        self.current_pose = 1
-        self.timer_reset()
-        self.update_text()
-        self.update_round()
-
-        try:
-            self.play_sounds_sequential("008.mp3")
-        except Exception as e:
-            print(f"[reset_action] play sound error: {e}")
-
-    
+        threading.Thread(target=countdown_thread, daemon=True).start()
  
         # Dictionary of sensor ranges from MCP3008 for each pose
     gestures = {
@@ -576,36 +484,109 @@ class AntiTriggerFingersApp(ctk.CTk):
         # Loop to check values from sensors
     def check_sensor_loop(self):
         if self.running:
-            values = [self.mcp.read_adc(i) for i in range(5)]
-            print(f"[Debug] Sensor values: {values}")
-            ranges = self.gestures.get(self.current_pose)
-            pose_ok = all(low <= val <= high for val, (low, high) in zip(values, ranges))
+            current_time = time.time()
+            elapsed = current_time - self.last_update_time
+            
+            # อัปเดตเวลาที่เหลือสำหรับอนิเมชัน
+            if elapsed >= 1.0:  # ทุก 1 วินาที
+                self.last_update_time = current_time
+                values = [self.mcp.read_adc(i) for i in range(5)]
+                print(f"[Debug] Sensor values: {values}")
+                ranges = self.gestures.get(self.current_pose)
+                pose_ok = all(low <= val <= high for val, (low, high) in zip(values, ranges))
 
-            if pose_ok:
-                if self.hand_posit < 5:
-                    self.hand_posit += 1
-                    self.update_pic()
+                if pose_ok:
+                    if self.hand_posit < 5:
+                        self.hand_posit += 1
+                        self.update_pic()
 
-                if self.hand_posit == 5 and self.time_current > 0 and not self.still_hold:
-                    self.time_current -= 1
-                    self.update_timer()
-                if self.time_current <= 0:
-                    self.write_log(f"ท่า{self.pose_name[self.current_pose]}สําเร็จ!")
-                    self.current_pose += 1
-                    if self.current_pose > 5:
-                        self.current_pose = 1
-                        self.round += 1
-                        if self.round >= 10:
-                            self.round = 0
-                            self.set += 1
-                        self.update_round()
+                    if pose_ok and self.hand_posit == 5 and self.time_remaining > 0 and not self.still_hold:
+                        self.time_remaining -= 1
+                    else:
+                        # ถ้ายังไม่ตั้งท่าถูก ให้รีเซ็ตเวลาให้อยู่ที่ค่าเต็ม
+                        self.time_remaining = self.time_max
+                    
+                    if self.time_remaining <= 0:
+                        self.write_log(f"ท่า{self.pose_name[self.current_pose]}สําเร็จ!")
+                        self.current_pose += 1
+                        if self.current_pose > 5:
+                            self.current_pose = 1
+                            self.round += 1
+                            if self.round >= 10:
+                                self.round = 0
+                                self.set += 1
+                            self.update_round()
 
-                    self.timer_reset()
-                    self.update_EX_pose()
-                    self.update_text()
-                    sound_file = self.pose_sounds[self.current_pose][0]
-                    self.play_sounds_sequential(sound_file)
-            self.after(1000, self.check_sensor_loop)
+                        self.timer_reset()
+                        self.update_EX_pose()
+                        self.update_text()
+                        sound_file = self.pose_sounds[self.current_pose][0]
+                        self.play_sounds_sequential(sound_file)
+            
+            # อัปเดตอนิเมชันของ timer อย่างต่อเนื่อง
+            self.update_timer_animation()
+            self.after(self.animation_interval, self.check_sensor_loop)
+
+    def update_timer_animation(self):
+        current_time = time.time()
+        elapsed_since_last_update = current_time - self.last_update_time
+        
+        if elapsed_since_last_update < 1.0 and self.time_remaining > 0:
+            # คำนวณเวลาที่เหลือสำหรับการแสดงผล (ลดลงแบบต่อเนื่อง)
+            display_time = self.time_remaining - elapsed_since_last_update
+            if display_time < 0:
+                display_time = 0
+            
+            # คำนวณความคืบหน้าแบบสมูท
+            smooth_progress = (self.time_max - display_time) / self.time_max
+            smooth_extent = 360 * smooth_progress
+            
+            # อัปเดต UI
+            self.timer_canvas.delete("progress")
+            self.timer_canvas.itemconfig(self.timer_text, text=f"{int(display_time)}")
+            self.timer_canvas.create_arc(10, 10, 190, 190, start=90, outline="#3CB371", 
+                                    width=10, extent=-smooth_extent, style="arc", tags="progress")
+
+        # Reset all values to default
+    def reset_action(self):
+        print("[Debug] : Reset action")
+        self.play_sounds_sequential("008.mp3")
+        # reset value
+        self.round = 0
+        self.set = 0
+        self.current_pose = 1
+        self.hand_posit = 0
+        self.time_current = self.time_max
+        self.is_pass = False
+        self.still_hold = False
+        self.running = False   # reset state
+
+        # reset UI
+        self.reset_pic()
+        self.update_timer()
+        self.update_round()
+        self.update_EX_pose()
+        self.update_text()
+
+        # reset Start/Stop button
+        self.start_stop_button.configure(
+            text="เริ่มต้น",
+            fg_color=self.green_btn,
+            hover_color=self.hover_green_bt
+        )
+
+    def toggle_start_pause(self):
+        if self.start_stop_button.cget("text") == "เริ่มต้น":
+            self.start_stop_button.configure(text="หยุด",fg_color=self.yellow_btn,hover_color=self.hover_yellow_bt)
+            self.running = True
+            self.start_pose_countdown(2)
+            self.play_sounds_sequential("006.mp3")
+            if self.current_pose == 1:
+                self.after(1500, lambda: self.play_sounds_sequential(self.pose_sounds[self.current_pose][0]))
+        else:
+            self.start_stop_button.configure(text="เริ่มต้น",fg_color=self.green_btn,hover_color=self.hover_green_bt)
+            self.running = False
+            self.play_sounds_sequential("007.mp3")
 
 # Function to create dummy images for testing (if real images are missing)
 def create_dummy_images():
