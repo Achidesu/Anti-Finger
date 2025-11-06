@@ -1,8 +1,8 @@
 from PIL import Image, ImageTk      # Import Pillow for handling images
 import customtkinter as ctk         # CustomTkinter for modern Tkinter UI
 import threading
-#import Adafruit_GPIO.SPI as SPI
-#import Adafruit_MCP3008             # Library for MCP3008 ADC
+import Adafruit_GPIO.SPI as SPI
+import Adafruit_MCP3008             # Library for MCP3008 ADC
 import time
 from datetime import datetime, timedelta
 import pygame
@@ -46,7 +46,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         # --- Initialize MCP3008 ADC ---
         SPI_PORT   = 0
         SPI_DEVICE = 0
-        #self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
+        self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
         
         # --- UI Colors ---
         self.purple_bg = "#6a0dad" 
@@ -214,7 +214,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.running = False
         self.check_sensor_loop()
         self.last_update_time = time.time()
-        self.animation_interval = 50  # อัปเดตทุก 50 มิลลิวินาที (0.05 วินาที)
+        self.animation_interval = 50 
         self.time_remaining = self.time_max
         
         self.pose_sounds = {
