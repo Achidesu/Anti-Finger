@@ -77,14 +77,25 @@ class AntiTriggerFingersApp(ctk.CTk):
         # Assuming you have 'hatyai_logo.png' in the same directory
         try:
             logo_image_pil = Image.open("pictures/logo.png")
-            logo_image_pil = logo_image_pil.resize((130, 130)) # Resize logo
+            logo_image_pil = logo_image_pil.resize((130, 130))
             self.logo_photo = ImageTk.PhotoImage(logo_image_pil)
-            self.logo_label = ctk.CTkLabel(self.top_bar_frame, image=self.logo_photo, fg_color=self.purple_bg, text="")
+            self.logo_label = ctk.CTkLabel(
+                self.top_bar_frame,
+                image=self.logo_photo,
+                fg_color=self.purple_bg,
+                text=""
+            )
             self.logo_label.pack(side="left", padx=20, pady=10)
         except FileNotFoundError:
-            self.logo_label = ctk.CTkLabel(self.top_bar_frame, text="LOGO", font=("THSarabun", 20), bg=self.purple_bg, fg=self.white_fg)
+            self.logo_label = ctk.CTkLabel(
+                self.top_bar_frame,
+                text="LOGO",
+                font=("THSarabun", 20),
+                fg_color=self.purple_bg,  # Changed from bg
+                text_color=self.white_fg  # Changed from fg
+            )
             self.logo_label.pack(side="left", padx=20, pady=10)
-            print("Warning: hatyai_logo.png not found. Using text placeholder.")
+            print("Warning: logo.png not found. Using text placeholder.")
 
 
         # App Title in header
@@ -109,15 +120,26 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         # --- Robot Hand Image (Left) ---
         try:
-            # show the starting image index 6
-            robot_hand_image_pil = Image.open("pictures/pose_1/6.jpg")
+            # show the starting image index 5
+            robot_hand_image_pil = Image.open("pictures/pose_1/5.jpg")
             robot_hand_image_pil = robot_hand_image_pil.resize((400, 450), Image.LANCZOS) 
             self.robot_hand_photo = ImageTk.PhotoImage(robot_hand_image_pil)
-            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.robot_hand_photo ,text="")
+            self.robot_hand_label = ctk.CTkLabel(
+                self.main_content_frame, 
+                image=self.robot_hand_photo,
+                text=""
+            )
             self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew") 
         except FileNotFoundError:
-            self.robot_hand_label = ctk.CTkLabel(self.main_content_frame, text="Robot Hand Image\n(Placeholder)",
-                                            font=self.font_medium_text, bg="gray", fg="white", width=25, height=15)
+            self.robot_hand_label = ctk.CTkLabel(
+                self.main_content_frame,
+                text="Robot Hand Image\n(Placeholder)",
+                font=self.font_medium_text,
+                fg_color="gray",  # Changed from bg
+                text_color="white",  # Changed from fg
+                width=25,
+                height=15
+            )
             self.robot_hand_label.grid(row=0, column=0, rowspan=3, padx=40, pady=20, sticky="nsew")
             print("Warning: robot_hand.png not found. Using text placeholder.")
 
@@ -182,14 +204,24 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         # --- Small Pose Image (Right Bottom) ---
         try:
-            small_hand_image_pil = Image.open("pictures/EX_POSE/pose1.png") # Assuming 'small_hand.png'
+            small_hand_image_pil = Image.open("pictures/EX_POSE/pose1.png")
             small_hand_image_pil = small_hand_image_pil.resize((200, 200), Image.LANCZOS)
             self.small_hand_photo = ImageTk.PhotoImage(small_hand_image_pil)
-            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, image=self.small_hand_photo, text="")
+            self.small_hand_label = ctk.CTkLabel(
+                self.main_content_frame,
+                image=self.small_hand_photo,
+                text=""
+            )
             self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0,20), sticky="n") 
         except FileNotFoundError:
-            self.small_hand_label = ctk.CTkLabel(self.main_content_frame, text="Small Hand\nImage\n(Placeholder)",
-                                            font=("THSarabun", 16), bg="lightgray", width=15, height=10)
+            self.small_hand_label = ctk.CTkLabel(
+                self.main_content_frame,
+                text="Small Hand\nImage\n(Placeholder)",
+                font=("THSarabun", 16),
+                fg_color="lightgray",  # Changed from bg
+                width=15,
+                height=10
+            )
             self.small_hand_label.grid(row=1, column=2, padx=20, pady=(0,20), sticky="n")
             print("Warning: small_hand.png not found. Using text placeholder.")
             
