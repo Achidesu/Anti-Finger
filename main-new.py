@@ -34,13 +34,12 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.is_pass = False
         self.round = 0
         self.set = 0
-        # readable Thai pose names
         self.pose_name = ["placeholder",
-                          "เหยียดมือ",
-                          "ทำหมัดคลาย",
-                          "กำมือ",
-                          "กางนิ้ว",
-                          "งอนิ้ว"]
+                          "à¹€à¸«à¸¢à¸µà¸¢à¸”à¸¡à¸·à¸­à¸•à¸£à¸‡",
+                          "à¸—à¸³à¸¡à¸·à¸­à¸„à¸¥à¹‰à¸²à¸¢à¸•à¸°à¸‚à¸­",
+                          "à¸à¸³à¸¡à¸·à¸­",
+                          "à¸à¸³à¸¡à¸·à¸­à¹à¸šà¸šà¹€à¸«à¸¢à¸µà¸¢à¸”à¸›à¸¥à¸²à¸¢à¸™à¸´à¹‰à¸§",
+                          "à¸‡à¸­à¹‚à¸„à¸™à¸™à¸´à¹‰à¸§à¹à¸•à¹ˆà¹€à¸«à¸¢à¸µà¸¢à¸”à¸›à¸¥à¸²à¸¢à¸™à¸´à¹‰à¸§à¸¡à¸·à¸­"]
         self.extent = 0
         self.progress = 0
         self.time_current = self.time_max
@@ -130,7 +129,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.times_line_frame = ctk.CTkFrame(self.set_times_frame, fg_color=self.light_gray_bg)
         self.times_line_frame.pack(side="top", pady=(10,0))
 
-        self.Label_times_text = ctk.CTkLabel(self.times_line_frame, text="ครั้งที่ : ", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_times_text = ctk.CTkLabel(self.times_line_frame, text="à¸„à¸£à¸±à¹‰à¸‡à¸—à¸µà¹ˆ : ", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_times_text.pack(side="left", padx=(10,0))
 
         self.Label_set_times_number = ctk.CTkLabel(self.times_line_frame, text=f"{self.round}", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
@@ -140,7 +139,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.sets_line_frame = ctk.CTkFrame(self.set_times_frame, fg_color=self.light_gray_bg)
         self.sets_line_frame.pack(side="top", pady=(0,10)) # Padding only bottom
 
-        self.Label_set_text = ctk.CTkLabel(self.sets_line_frame, text="เซตที่ : ", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_set_text = ctk.CTkLabel(self.sets_line_frame, text="à¹€à¸‹à¹‡à¸•à¸—à¸µà¹ˆ : ", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_set_text.pack(side="left", padx=(10,0))
 
         self.Label_set_number = ctk.CTkLabel(self.sets_line_frame, text=f"{self.set}", font=self.font_medium_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
@@ -151,7 +150,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.pose_text_frame = ctk.CTkFrame(self.main_content_frame, fg_color=self.light_gray_bg, border_width=1)
         self.pose_text_frame.grid(row=1, column=1, padx=20, pady=10, sticky="ew")
 
-        self.Label_pose_thai_text = ctk.CTkLabel(self.pose_text_frame, text=f"ท่าที่ {self.current_pose}", font=self.font_pose_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
+        self.Label_pose_thai_text = ctk.CTkLabel(self.pose_text_frame, text=f"à¸—à¹ˆà¸²à¸—à¸µà¹ˆ {self.current_pose}", font=self.font_pose_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
         self.Label_pose_thai_text.pack(side="top", pady=(10,0))
         
         self.Label_pose_action_text = ctk.CTkLabel(self.pose_text_frame, text=f"{self.pose_name[self.current_pose]}", font=self.font_pose_text, text_color=self.black_fg, fg_color=self.light_gray_bg)
@@ -162,12 +161,12 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.buttons_frame.grid(row=2, column=1, columnspan=2, padx=(10),pady=(10, 20), sticky="ew") 
 
         # --- Start/Pause ---
-        self.start_stop_button = ctk.CTkButton(self.buttons_frame, text="เริ่มทำ", font=("TH Sarabun", 50 ,"bold"), 
+        self.start_stop_button = ctk.CTkButton(self.buttons_frame, text="à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™", font=("TH Sarabun", 50 ,"bold"), 
         fg_color=self.green_btn, text_color=self.white_fg, 
         command=self.toggle_start_pause, height=80, width=200, hover_color=self.hover_green_bt); self.start_stop_button.pack(side="left", padx=0)
         
         # --- Reset ---
-        self.reset_button = ctk.CTkButton(self.buttons_frame, text="รีเซ็ต", font=("TH Sarabun", 50 ,"bold"),
+        self.reset_button = ctk.CTkButton(self.buttons_frame, text="à¸£à¸µà¹€à¸‹à¹‡à¸•", font=("TH Sarabun", 50 ,"bold"),
         fg_color=self.red_btn, text_color=self.white_fg, 
         command=self.reset_action, height=80, width=200,hover_color=self.hover_red_bt); self.reset_button.pack(side="left", padx=10)
 
@@ -195,30 +194,30 @@ class AntiTriggerFingersApp(ctk.CTk):
             print("Warning: small_hand.png not found. Using text placeholder.")
             
         # --- log ---
-        self.log_button = ctk.CTkButton(self.buttons_frame,text="รายงาน",font=("TH Sarabun", 50 ,"bold"),fg_color="#4285F4",text_color=self.white_fg,
+        self.log_button = ctk.CTkButton(self.buttons_frame,text="à¸£à¸²à¸¢à¸‡à¸²à¸™",font=("TH Sarabun", 50 ,"bold"),fg_color="#4285F4",text_color=self.white_fg,
         command=self.show_history_page,height=80, width=200,hover_color="#3367D6")
         self.log_button.pack(side="right", padx=100)
         
         # --- History Page ---
         self.history_page = ctk.CTkFrame(self, fg_color=self.light_gray_bg_program)
 
-        self.history_title = ctk.CTkLabel(self.history_page, text="รายงานย้อนหลัง",font=("TH Sarabun", 55 ,"bold"), text_color=self.black_fg)
+        self.history_title = ctk.CTkLabel(self.history_page, text="à¸£à¸²à¸¢à¸‡à¸²à¸™à¸¢à¹‰à¸­à¸™à¸«à¸¥à¸±à¸‡",font=("TH Sarabun", 55 ,"bold"), text_color=self.black_fg)
         self.history_title.pack(pady=20)
 
         self.history_textbox = ctk.CTkTextbox(self.history_page, width=1000, height=500,font=("TH Sarabun", 28 ,"bold"), text_color=self.black_fg)
         self.history_textbox.pack(padx=40, pady=20)
 
-        self.back_button = ctk.CTkButton(self.history_page, text="กลับ",font=("TH Sarabun", 50 ,"bold"), fg_color="#FF9800",text_color="white", hover_color="#E68900",
+        self.back_button = ctk.CTkButton(self.history_page, text="à¸à¸¥à¸±à¸š",font=("TH Sarabun", 50 ,"bold"), fg_color="#FF9800",text_color="white", hover_color="#E68900",
         command=self.show_main_page, height=70, width=200)
         self.back_button.place(x=900, y=500)
 
 
-        # sensor loop settings
+        #senser loop
         self.running = False
-        self.animation_interval = 50
-        self.last_update_time = time.time()
         # schedule first sensor loop after UI is set (use animation_interval ms)
         self.after(self.animation_interval, self.check_sensor_loop)
+        self.last_update_time = time.time()
+        self.animation_interval = 50 
         self.time_remaining = self.time_max
         
         self.pose_sounds = {
@@ -254,7 +253,7 @@ class AntiTriggerFingersApp(ctk.CTk):
             with open("Anti-Finger.txt", "r", encoding="utf-8") as f:
                 lines = f.readlines()
         except FileNotFoundError:
-            lines = ["ไม่พบประวัติ\n"]
+            lines = ["No history found.\n"]
 
         max_lines = 100000
         if len(lines) > max_lines:
@@ -271,14 +270,14 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.after(2000, self.load_history)
 
     def clean_old_logs(self, file_path="Anti-Finger.txt", days=7):
-        """ลบเงื่อนไขเก่าออกจาก log ที่เก็บไว้เกิน X วัน"""
+        """à¸¥à¸šà¹€à¸‰à¸žà¸²à¸°à¸šà¸£à¸£à¸—à¸±à¸” log à¸—à¸µà¹ˆà¹€à¸à¹ˆà¸²à¸à¸§à¹ˆà¸² X à¸§à¸±à¸™"""
         if not os.path.exists(file_path):
             return
 
         cutoff = datetime.now() - timedelta(days=days)
         new_lines = []
 
-        # รูปแบบเวลาใน log: [YYYY-MM-DD HH:MM:SS]
+        # à¸£à¸¹à¸›à¹à¸šà¸šà¸§à¸±à¸™à¸—à¸µà¹ˆ: [YYYY-MM-DD HH:MM:SS]
         pattern = re.compile(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]")
 
         with open(file_path, "r", encoding="utf-8") as f:
@@ -291,16 +290,16 @@ class AntiTriggerFingersApp(ctk.CTk):
                         if log_time >= cutoff:
                             new_lines.append(line)
                     except ValueError:
-                        # ถ้า format ไม่ตรงก็ให้เก็บไว้
+                        # à¸–à¹‰à¸² format à¹„à¸¡à¹ˆà¸•à¸£à¸‡ à¸ˆà¸°à¹„à¸¡à¹ˆà¸¥à¸š
                         new_lines.append(line)
                 else:
                     new_lines.append(line)
 
-        # เขียนกลับไปยังไฟล์
+        # à¹€à¸‚à¸µà¸¢à¸™à¸à¸¥à¸±à¸šà¹€à¸‰à¸žà¸²à¸°à¸šà¸£à¸£à¸—à¸±à¸”à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸à¹ˆà¸²à¹€à¸à¸´à¸™
         with open(file_path, "w", encoding="utf-8") as f:
             f.writelines(new_lines)
 
-        print(f"[Log Cleanup] ลบ log ที่เก็บไว้เกิน {days} วันเรียบร้อย")
+        print(f"[Log Cleanup] à¸¥à¸š log à¸—à¸µà¹ˆà¹€à¸à¹ˆà¸²à¸à¸§à¹ˆà¸² {days} à¸§à¸±à¸™à¹€à¸£à¸µà¸¢à¸šà¸£à¹‰à¸­à¸¢à¹à¸¥à¹‰à¸§")
         
         # show main when dont click log
     def show_main_page(self):
@@ -318,7 +317,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         #log text setting
     def write_log(self, message):
         now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        log_message = f"{now} เซตที่ {self.set} ครั้งที่ {self.round} : {message}"
+        log_message = f"{now} à¹€à¸‹à¹‡à¸•à¸—à¸µà¹ˆ {self.set} à¸„à¸£à¸±à¹‰à¸‡à¸—à¸µà¹ˆ {self.round} : {message}"
         
         with open("Anti-Finger.txt", "a", encoding="utf-8") as f:
             f.write(log_message + "\n") 
@@ -370,11 +369,11 @@ class AntiTriggerFingersApp(ctk.CTk):
         # Update the timer UI
     def update_timer(self): 
         if self.time_remaining > 0:
-            # คำนวณความก้าวหน้า 0 → 360Â°
+            # à¸„à¸³à¸™à¸§à¸“à¸„à¸§à¸²à¸¡à¸„à¸·à¸šà¸«à¸™à¹‰à¸²
             self.progress = (self.time_max - self.time_remaining) / self.time_max
             self.extent = 360 * self.progress
             
-            # อัพเดท UI
+            # à¸­à¸±à¸›à¹€à¸”à¸• UI
             self.timer_canvas.delete("progress")
             self.timer_canvas.itemconfig(self.timer_text, text=str(int(self.time_remaining)))
             self.timer_canvas.create_arc(10, 10, 190, 190, start=90, outline="#3CB371", 
@@ -421,37 +420,37 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         # Update pose text
     def update_text(self):
-        self.Label_pose_thai_text.configure(text=f"ท่าที่ {self.current_pose}")
+        self.Label_pose_thai_text.configure(text=f"à¸—à¹ˆà¸²à¸—à¸µà¹ˆ {self.current_pose}")
         self.Label_pose_action_text.configure(text=f"{self.pose_name[self.current_pose] }")
 
         # Countdown before starting
     def start_pose_countdown(self, count=3):
         def countdown_thread():
-            total_time = count  # เวลาเตรียม 3 วินาที
+            total_time = count  # à¹€à¸Šà¹ˆà¸™ 3 à¸§à¸´à¸™à¸²à¸—à¸µ
             start_time = time.time()
             end_time = start_time + total_time
-            step_time = 0.02  # อัพเดททุก 0.02 วินาที (50 FPS)
+            step_time = 0.02  # à¸­à¸±à¸›à¹€à¸”à¸•à¸—à¸¸à¸ 0.02 à¸§à¸´à¸™à¸²à¸—à¸µ (50 FPS)
 
             while self.running and time.time() < end_time:
                 elapsed = time.time() - start_time
                 remaining = max(0, total_time - elapsed)
 
-                # คำนวณ progress รอบวงกลม 0 → 360Â°
+                # à¸„à¸³à¸™à¸§à¸“ progress à¸£à¸§à¸¡à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” 0 â†’ 360Â°
                 progress = (elapsed / total_time) * 360
 
-                # วาดวงกลมโปรเกรสสีเหลือง
+                # à¸§à¸²à¸”à¸§à¸‡à¸à¸¥à¸¡à¹€à¸«à¸¥à¸·à¸­à¸‡à¸—à¸µà¹ˆà¸„à¹ˆà¸­à¸¢ à¹† à¸«à¸¡à¸¸à¸™
                 self.timer_canvas.delete("progress")
                 self.timer_canvas.create_arc(
                     10, 10, 190, 190,
                     start=90,
-                    outline="#FFD700",  # สีทอง
+                    outline="#FFD700",  # à¸ªà¸µà¸—à¸­à¸‡
                     width=10,
                     extent=-progress,
                     style="arc",
                     tags="progress"
                 )
 
-                # แสดงตัวเลข countdown
+                # à¹à¸ªà¸”à¸‡à¹€à¸¥à¸‚ countdown à¹ƒà¸«à¹‰à¸„à¸£à¸šà¸—à¸¸à¸à¸§à¸´à¸™à¸²à¸—à¸µ
                 number = int(remaining) + 1 if remaining > 0.2 else 0
                 self.timer_canvas.itemconfig(self.timer_text, text=str(number if number > 0 else ""))
 
@@ -466,7 +465,7 @@ class AntiTriggerFingersApp(ctk.CTk):
                 )
                 self.timer_canvas.itemconfig(self.timer_text, text=str(self.time_max))
 
-                print("[Debug] : Countdown finished → Start main loop")
+                print("[Debug] : Countdown finished â†’ Start main loop")
                 # start at 6 when countdown completes (will step to 5 on hold)
                 self.hand_posit = 6
                 self.time_current = self.time_max
@@ -490,14 +489,14 @@ class AntiTriggerFingersApp(ctk.CTk):
     
         # Loop to check values from sensors
     def check_sensor_loop(self):
-        # Wrap the sensor loop in try/except to prevent uncaught exceptions from crashing Tkinter
-        try:
+        if self.running:
             current_time = time.time()
             elapsed = current_time - self.last_update_time
 
             if not hasattr(self, "pose_hold_start"):
-                self.pose_hold_start = None
+                self.pose_hold_start = None  # ?????????????????????????????????
 
+            # ????????? 0.1 ?????? (?????????????????????)
             if elapsed >= 0.1:
                 self.last_update_time = current_time
                 values = [self.mcp.read_adc(i) for i in range(5)]
@@ -507,20 +506,20 @@ class AntiTriggerFingersApp(ctk.CTk):
                 pose_ok = all(low <= val <= high for val, (low, high) in zip(values, ranges))
 
                 if pose_ok:
-                    if self.pose_hold_start is None:
+                     if self.pose_hold_start is None:
                         self.pose_hold_start = current_time
 
-                    hold_duration = current_time - self.pose_hold_start
-                    if hold_duration >= 0.5:
-                        # Step from 6 -> 5 once, and do not go below 5
+                     hold_duration = current_time - self.pose_hold_start
+                     if hold_duration >= 0.5:
+                        # Step from 6 -> 5 once, and do not go below 5 (per request)
                         if self.hand_posit == 6:
                             self.hand_posit = 5
                             self.update_pic()
 
                         if self.time_remaining > 0:
-                            self.time_remaining -= 0.1
+                            self.time_remaining -= 0.1 
                         else:
-                            self.write_log(f"ท่า{self.pose_name[self.current_pose]}สำเร็จ!")
+                            self.write_log(f"à¸—à¹ˆà¸²{self.pose_name[self.current_pose]}à¸ªà¹à¸²à¹€à¸£à¹‡à¸ˆ!")
                             self.current_pose += 1
                             if self.current_pose > 5:
                                 self.current_pose = 1
@@ -541,29 +540,24 @@ class AntiTriggerFingersApp(ctk.CTk):
                     self.time_remaining = self.time_max
 
             self.update_timer_animation()
-        except Exception as e:
-            import traceback
-            print("[Error] exception in check_sensor_loop:", e)
-            traceback.print_exc()
-        finally:
-            # always schedule next invocation (use ms)
-            try:
-                self.after(self.animation_interval, self.check_sensor_loop)
-            except Exception as e:
-                print("[Error] failed to schedule next check_sensor_loop:", e)
+            # schedule next check using animation_interval (ms)
+            self.after(self.animation_interval, self.check_sensor_loop)
 
     def update_timer_animation(self):
         current_time = time.time()
         elapsed_since_last_update = current_time - self.last_update_time
         
         if elapsed_since_last_update < 1.0 and self.time_remaining > 0:
+
             display_time = self.time_remaining - elapsed_since_last_update
             if display_time < 0:
                 display_time = 0
             
+            # à¸„à¸³à¸™à¸§à¸“à¸„à¸§à¸²à¸¡à¸„à¸·à¸šà¸«à¸™à¹‰à¸²à¹à¸šà¸šà¸ªà¸¡à¸¹à¸—
             smooth_progress = (self.time_max - display_time) / self.time_max
             smooth_extent = 360 * smooth_progress
             
+            # à¸­à¸±à¸›à¹€à¸”à¸• UI
             self.timer_canvas.delete("progress")
             self.timer_canvas.itemconfig(self.timer_text, text=f"{int(display_time)}")
             self.timer_canvas.create_arc(10, 10, 190, 190, start=90, outline="#3CB371", 
@@ -593,21 +587,21 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         # reset Start/Stop button
         self.start_stop_button.configure(
-            text="เริ่มทำ",
+            text="à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™",
             fg_color=self.green_btn,
             hover_color=self.hover_green_bt
         )
 
     def toggle_start_pause(self):
-        if self.start_stop_button.cget("text") == "เริ่มทำ":
-            self.start_stop_button.configure(text="หยุด",fg_color=self.yellow_btn,hover_color=self.hover_yellow_bt)
+        if self.start_stop_button.cget("text") == "à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™":
+            self.start_stop_button.configure(text="à¸«à¸¢à¸¸à¸”",fg_color=self.yellow_btn,hover_color=self.hover_yellow_bt)
             self.running = True
             self.start_pose_countdown(2)
             self.play_sounds_sequential("006.mp3")
             if self.current_pose == 1:
                 self.after(1500, lambda: self.play_sounds_sequential(self.pose_sounds[self.current_pose][0]))
         else:
-            self.start_stop_button.configure(text="เริ่มทำ",fg_color=self.green_btn,hover_color=self.hover_green_bt)
+            self.start_stop_button.configure(text="à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™",fg_color=self.green_btn,hover_color=self.hover_green_bt)
             self.running = False
             self.play_sounds_sequential("007.mp3")
 
