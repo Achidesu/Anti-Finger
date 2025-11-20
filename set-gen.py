@@ -7,7 +7,7 @@ FILE_PATH = "Anti-Finger.txt"
 num_days = 30
 
 # วันเริ่มต้น
-start_date = datetime(2025, 10, 1, 8, 0, 0)
+start_date = datetime(2025, 11, 1, 8, 0, 0)
 
 # รายการท่าฝึก (5 ท่า)
 exercises = [
@@ -38,3 +38,4 @@ with open(FILE_PATH, "w", encoding="utf-8") as f:
 
 
 print(f"สร้างไฟล์ {FILE_PATH} เสร็จเรียบร้อย!")
+
