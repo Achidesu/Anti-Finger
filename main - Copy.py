@@ -5,10 +5,9 @@ import Adafruit_GPIO.SPI as SPI
 import Adafruit_MCP3008             # Library for MCP3008 ADC
 import time
 from datetime import datetime, timedelta
+import os, re
 import pygame
 from playsound import playsound
-import os
-import re
 
 # Main Application Class
 class AntiTriggerFingersApp(ctk.CTk):
@@ -213,9 +212,6 @@ class AntiTriggerFingersApp(ctk.CTk):
         #senser loop
         self.running = False
         self.check_sensor_loop()
-        self.last_update_time = time.time()
-        self.animation_interval = 50 
-        self.time_remaining = self.time_max
         
         self.pose_sounds = {
             1: ["001.mp3"],
@@ -246,15 +242,16 @@ class AntiTriggerFingersApp(ctk.CTk):
         
         # log page
     def load_history(self):
+        # Run cleanup first to remove old log lines older than 7 days
+        self.clean_old_logs("Anti-Finger.txt", days=7)
+
         try:
             with open("Anti-Finger.txt", "r", encoding="utf-8") as f:
                 lines = f.readlines()
         except FileNotFoundError:
             lines = ["No history found.\n"]
 
-        max_lines = 100000
-        if len(lines) > max_lines:
-            lines = lines[-max_lines:]
+        # ไม่มีการจำกัดจำนวนบันทัดแล้ว — แสดงทั้งหมดที่มี
 
         # clear textbox
         self.history_textbox.configure(state="normal")
@@ -262,12 +259,12 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.history_textbox.insert("end", "".join(lines))
         self.history_textbox.see("end")
         self.history_textbox.configure(state="disabled")
-        
+
         # recall 2 sec
         self.after(2000, self.load_history)
 
     def clean_old_logs(self, file_path="Anti-Finger.txt", days=7):
-        """ลบเฉพาะบรรทัด log ที่เก่ากว่า X วัน"""
+        """ลบบรรทัด log ที่มี timestamp เก่ากว่า X วัน (เขียนไฟล์แบบอะตอมมิก)"""
         if not os.path.exists(file_path):
             return
 
@@ -275,58 +272,41 @@ class AntiTriggerFingersApp(ctk.CTk):
         new_lines = []
         removed_count = 0
 
-        # รูปแบบวันที่: [YYYY-MM-DD HH:MM:SS]  (รองรับรูปแบบอื่นเป็นสำรอง)
+        # รูปแบบวันที่คาดว่า: [YYYY-MM-DD HH:MM:SS]
         pattern = re.compile(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]")
 
-        def try_parse_date(date_str):
-            """พยายามแปลงวันที่ด้วยหลายรูปแบบ ถ้าไม่สำเร็จคืน None"""
-            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y/%m/%d %H:%M:%S", "%Y-%m-%d"):
-                try:
-                    return datetime.strptime(date_str, fmt)
-                except Exception:
-                    continue
-            return None
+        def try_parse_date(s):
+            try:
+                return datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                return None
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 for line in f:
-                    match = pattern.search(line)
-                    if match:
-                        date_str = match.group(1)
-                        log_time = try_parse_date(date_str)
-                        if log_time:
-                            if log_time >= cutoff:
-                                new_lines.append(line)
-                            else:
-                                removed_count += 1
+                    m = pattern.search(line)
+                    if m:
+                        dt = try_parse_date(m.group(1))
+                        if dt and dt >= cutoff:
+                            new_lines.append(line)
+                        elif dt:
+                            removed_count += 1
                         else:
-                            # ถ้าแปลงวันที่ไม่ได้ ให้เก็บบรรทัดไว้ (ไม่ลบ)
                             new_lines.append(line)
                     else:
-                        # ถ้าไม่มี timestamp ในรูปแบบหลัก ลองหา pattern สำรอง (เช่น / หรือ ไม่มีวงเล็บ)
-                        alt_match = re.search(r"(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})", line)
-                        if alt_match:
-                            date_str = alt_match.group(1)
-                            log_time = try_parse_date(date_str)
-                            if log_time and log_time >= cutoff:
-                                new_lines.append(line)
-                            elif log_time:
-                                removed_count += 1
-                            else:
-                                new_lines.append(line)
-                        else:
-                            # ถ้าไม่มีวันที่เลย ให้เก็บไว้ตามเดิม
-                            new_lines.append(line)
+                        # ถ้าไม่มี timestamp ในบรรทัด ให้เก็บไว้
+                        new_lines.append(line)
 
-            # เขียนกลับแบบอะตอมมิก (เขียนไฟล์ชั่วคราวแล้วแทนที่ไฟล์จริง)
             tmp_path = file_path + ".tmp"
             with open(tmp_path, "w", encoding="utf-8") as tmpf:
                 tmpf.writelines(new_lines)
             os.replace(tmp_path, file_path)
-
             print(f"[Log Cleanup] ลบ {removed_count} บรรทัดที่เก่ากว่า {days} วันเรียบร้อยแล้ว")
         except Exception as e:
             print(f"[Log Cleanup] เกิดข้อผิดพลาด: {e}")
+
+        # recall 2 sec
+        self.after(2000, self.load_history)
         
         # show main when dont click log
     def show_main_page(self):
@@ -338,9 +318,11 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.main_content_frame.pack_forget()
         self.play_sounds_sequential("009.mp3")
         self.history_page.pack(side="top", fill="both", expand=True, pady=20)
-        self.load_history()
+        # ลบ log เก่าก่อน แล้วค่อยโหลดทั้งหมดเพื่อแสดง
         self.clean_old_logs()
+        self.load_history()
         
+
         #log text setting
     def write_log(self, message):
         now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
@@ -361,9 +343,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         # Reset timer back to max/hand position
     def timer_reset(self):
         self.time_current = self.time_max
-        self.time_remaining = self.time_max  # รีเซ็ตเวลาสำหรับอนิเมชัน
         self.hand_posit = 0
-        self.last_update_time = time.time()  # รีเซ็ตเวลาอ้างอิง
         self.update_timer()
         self.reset_pic()
         print("[Debug] : Timer reset!")
@@ -393,18 +373,16 @@ class AntiTriggerFingersApp(ctk.CTk):
 
         # Update the timer UI
     def update_timer(self): 
-        if self.time_remaining > 0:
-            # คำนวณความคืบหน้า
-            self.progress = (self.time_max - self.time_remaining) / self.time_max
+        if self.time_current > 0:
+            self.progress = (self.time_max - self.time_current) / self.time_max
             self.extent = 360 * self.progress
-            
-            # อัปเดต UI
+            print(f"[Debug] : Timer : {self.time_current}")
             self.timer_canvas.delete("progress")
-            self.timer_canvas.itemconfig(self.timer_text, text=str(int(self.time_remaining)))
-            self.timer_canvas.create_arc(10, 10, 190, 190, start=90, outline="#3CB371", 
-                                    width=10, extent=-self.extent, style="arc", tags="progress")
+            self.timer_canvas.itemconfig(self.timer_text, text=self.time_current)
+            self.timer_canvas.create_arc(10, 10, 190, 190,start=90,outline="#3CB371", width=10,extent=-self.extent,style="arc",tags="progress")
         else:
-            self.timer_canvas.itemconfig(self.timer_text, text="0")
+            print(f"[Debug] : Timer : {self.time_current}")
+            self.timer_canvas.itemconfig(self.timer_text, text=self.time_current)
             self.timer_canvas.delete("progress")
             self.timer_canvas.create_oval(10, 10, 190, 190, outline="#3CB371", width=10, tags="progress")
 
@@ -449,58 +427,16 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.Label_pose_action_text.configure(text=f"{self.pose_name[self.current_pose] }")
 
         # Countdown before starting
-    def start_pose_countdown(self, count=3):
-        def countdown_thread():
-            total_time = count  # เช่น 3 วินาที
-            start_time = time.time()
-            end_time = start_time + total_time
-            step_time = 0.02  # อัปเดตทุก 0.02 วินาที (50 FPS)
-
-            while self.running and time.time() < end_time:
-                elapsed = time.time() - start_time
-                remaining = max(0, total_time - elapsed)
-
-                # คำนวณ progress รวมทั้งหมด 0 → 360°
-                progress = (elapsed / total_time) * 360
-
-                # วาดวงกลมเหลืองที่ค่อย ๆ หมุน
-                self.timer_canvas.delete("progress")
-                self.timer_canvas.create_arc(
-                    10, 10, 190, 190,
-                    start=90,
-                    outline="#FFD700",  # สีทอง
-                    width=10,
-                    extent=-progress,
-                    style="arc",
-                    tags="progress"
-                )
-
-                # แสดงเลข countdown ให้ครบทุกวินาที
-                number = int(remaining) + 1 if remaining > 0.2 else 0
-                self.timer_canvas.itemconfig(self.timer_text, text=str(number if number > 0 else ""))
-
-                time.sleep(step_time)
-
-            if self.running:
-                # Countdown จบ → เปลี่ยนเป็นสีเขียวแล้วเริ่มจับเวลา
-                self.timer_canvas.delete("progress")
-                self.timer_canvas.create_oval(
-                    10, 10, 190, 190,
-                    outline="#3CB371", width=10, tags="progress"
-                )
-                self.timer_canvas.itemconfig(self.timer_text, text=str(self.time_max))
-
-                print("[Debug] : Countdown finished → Start main loop")
-                self.hand_posit = 0
-                self.time_current = self.time_max
-                self.time_remaining = self.time_max
-                self.last_update_time = time.time()
-                self.update_timer()
-
-                # เริ่ม loop sensor หลัง countdown จบ 1 วิ
-                self.after(1000, self.check_sensor_loop)
-
-        threading.Thread(target=countdown_thread, daemon=True).start()
+    def start_pose_countdown(self, count=2):
+        if count > 0:
+            print(f"[Countdown] : {count}")
+            self.after(1000, self.start_pose_countdown, count-1)
+        else:
+            print("[Debug] : Go!")
+            self.hand_posit = 0
+            self.time_current = self.time_max
+            self.update_timer()
+            self.check_sensor_loop()
  
         # Dictionary of sensor ranges from MCP3008 for each pose
     gestures = {
@@ -514,68 +450,36 @@ class AntiTriggerFingersApp(ctk.CTk):
         # Loop to check values from sensors
     def check_sensor_loop(self):
         if self.running:
-            current_time = time.time()
-            elapsed = current_time - self.last_update_time
-            
-            # อัปเดตเวลาที่เหลือสำหรับอนิเมชัน
-            if elapsed >= 1.0:  # ทุก 1 วินาที
-                self.last_update_time = current_time
-                values = [self.mcp.read_adc(i) for i in range(5)]
-                print(f"[Debug] Sensor values: {values}")
-                ranges = self.gestures.get(self.current_pose)
-                pose_ok = all(low <= val <= high for val, (low, high) in zip(values, ranges))
+            values = [self.mcp.read_adc(i) for i in range(5)]
+            print(f"[Debug] Sensor values: {values}")
+            ranges = self.gestures.get(self.current_pose)
+            pose_ok = all(low <= val <= high for val, (low, high) in zip(values, ranges))
 
-                if pose_ok:
-                    if self.hand_posit < 5:
-                        self.hand_posit += 1
-                        self.update_pic()
+            if pose_ok:
+                if self.hand_posit < 5:
+                    self.hand_posit += 1
+                    self.update_pic()
 
-                    if pose_ok and self.hand_posit == 5 and self.time_remaining > 0 and not self.still_hold:
-                        self.time_remaining -= 1
-                    else:
-                        # ถ้ายังไม่ตั้งท่าถูก ให้รีเซ็ตเวลาให้อยู่ที่ค่าเต็ม
-                        self.time_remaining = self.time_max
-                    
-                    if self.time_remaining <= 0:
-                        self.write_log(f"ท่า{self.pose_name[self.current_pose]}สําเร็จ!")
-                        self.current_pose += 1
-                        if self.current_pose > 5:
-                            self.current_pose = 1
-                            self.round += 1
-                            if self.round >= 10:
-                                self.round = 0
-                                self.set += 1
-                            self.update_round()
+                if self.hand_posit == 5 and self.time_current > 0 and not self.still_hold:
+                    self.time_current -= 1
+                    self.update_timer()
+                if self.time_current <= 0:
+                    self.write_log(f"ท่า{self.pose_name[self.current_pose]}สําเร็จ!")
+                    self.current_pose += 1
+                    if self.current_pose > 5:
+                        self.current_pose = 1
+                        self.round += 1
+                        if self.round >= 10:
+                            self.round = 0
+                            self.set += 1
+                        self.update_round()
 
-                        self.timer_reset()
-                        self.update_EX_pose()
-                        self.update_text()
-                        sound_file = self.pose_sounds[self.current_pose][0]
-                        self.play_sounds_sequential(sound_file)
-            
-            # อัปเดตอนิเมชันของ timer อย่างต่อเนื่อง
-            self.update_timer_animation()
-            self.after(self.animation_interval, self.check_sensor_loop)
-
-    def update_timer_animation(self):
-        current_time = time.time()
-        elapsed_since_last_update = current_time - self.last_update_time
-        
-        if elapsed_since_last_update < 1.0 and self.time_remaining > 0:
-            # คำนวณเวลาที่เหลือสำหรับการแสดงผล (ลดลงแบบต่อเนื่อง)
-            display_time = self.time_remaining - elapsed_since_last_update
-            if display_time < 0:
-                display_time = 0
-            
-            # คำนวณความคืบหน้าแบบสมูท
-            smooth_progress = (self.time_max - display_time) / self.time_max
-            smooth_extent = 360 * smooth_progress
-            
-            # อัปเดต UI
-            self.timer_canvas.delete("progress")
-            self.timer_canvas.itemconfig(self.timer_text, text=f"{int(display_time)}")
-            self.timer_canvas.create_arc(10, 10, 190, 190, start=90, outline="#3CB371", 
-                                    width=10, extent=-smooth_extent, style="arc", tags="progress")
+                    self.timer_reset()
+                    self.update_EX_pose()
+                    self.update_text()
+                    sound_file = self.pose_sounds[self.current_pose][0]
+                    self.play_sounds_sequential(sound_file)
+            self.after(1000, self.check_sensor_loop)
 
         # Reset all values to default
     def reset_action(self):
