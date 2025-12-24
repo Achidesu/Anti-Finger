@@ -5,9 +5,10 @@ import Adafruit_GPIO.SPI as SPI
 import Adafruit_MCP3008             # Library for MCP3008 ADC
 import time
 from datetime import datetime, timedelta
-import os, re
 import pygame
 from playsound import playsound
+import os
+import re
 
 # Main Application Class
 class AntiTriggerFingersApp(ctk.CTk):
@@ -198,15 +199,37 @@ class AntiTriggerFingersApp(ctk.CTk):
         # --- History Page ---
         self.history_page = ctk.CTkFrame(self, fg_color=self.light_gray_bg_program)
 
-        self.history_title = ctk.CTkLabel(self.history_page, text="รายงานย้อนหลัง",font=("TH Sarabun", 55 ,"bold"), text_color=self.black_fg)
-        self.history_title.pack(pady=20)
+        self.history_title = ctk.CTkLabel(self.history_page, text="รายงานย้อนหลัง", font=("TH Sarabun", 55, "bold"), text_color=self.black_fg)
+        self.history_title.pack(pady=(20, 10))
 
-        self.history_textbox = ctk.CTkTextbox(self.history_page, width=1000, height=500,font=("TH Sarabun", 28 ,"bold"), text_color=self.black_fg)
-        self.history_textbox.pack(padx=40, pady=20)
+        # Frame 
+        self.history_container = ctk.CTkFrame(self.history_page, fg_color="transparent")
+        self.history_container.pack(fill="both", expand=True, padx=40, pady=10)
 
-        self.back_button = ctk.CTkButton(self.history_page, text="กลับ",font=("TH Sarabun", 50 ,"bold"), fg_color="#FF9800",text_color="white", hover_color="#E68900",
-        command=self.show_main_page, height=70, width=200)
-        self.back_button.place(x=900, y=500)
+        # Textbox 
+        self.history_textbox = ctk.CTkTextbox(self.history_container, width=900, height=400, font=("TH Sarabun", 28, "bold"), text_color=self.black_fg, activate_scrollbars=False)
+        self.history_textbox.pack(side="left", fill="both", expand=True)
+
+        # Frame 
+        self.scroll_btn_frame = ctk.CTkFrame(self.history_container, fg_color="transparent")
+        self.scroll_btn_frame.pack(side="right", fill="y", padx=(10, 0))
+
+        # das
+        self.btn_scroll_up = ctk.CTkButton(self.scroll_btn_frame, text="ขึ้น", font=("TH Sarabun", 30, "bold"), width=80, height=80,
+                                           fg_color="#607D8B", hover_color="#455A64",
+                                           command=lambda: self.history_textbox.yview_scroll(-2, "units")) # ??????? -2 ??????????????
+        self.btn_scroll_up.pack(side="top", pady=0, expand=True, fill="x")
+
+        # te
+        self.btn_scroll_down = ctk.CTkButton(self.scroll_btn_frame, text="ลง", font=("TH Sarabun", 30, "bold"), width=80, height=80,
+                                             fg_color="#607D8B", hover_color="#455A64",
+                                             command=lambda: self.history_textbox.yview_scroll(2, "units")) # ??????? 2 ??????????????
+        self.btn_scroll_down.pack(side="bottom", pady=0, expand=True, fill="x")
+
+        # back
+        self.back_button = ctk.CTkButton(self.history_page, text="กลับ", font=("TH Sarabun", 50, "bold"), fg_color="#FF9800", text_color="white", hover_color="#E68900",
+                                         command=self.show_main_page, height=70, width=200)
+        self.back_button.pack(pady=20, side="bottom", anchor="e", padx=40)
 
 
         #senser loop
@@ -242,71 +265,71 @@ class AntiTriggerFingersApp(ctk.CTk):
         
         # log page
     def load_history(self):
-        # Run cleanup first to remove old log lines older than 7 days
-        self.clean_old_logs("Anti-Finger.txt", days=7)
+        # 1. Ensure absolute path
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(script_dir, "Anti-Finger.txt")
+        
+        # 2. Clean old logs first (optional, but keeps file small)
+        self.clean_old_logs(file_path, days=7)
 
-        try:
-            with open("Anti-Finger.txt", "r", encoding="utf-8") as f:
-                lines = f.readlines()
-        except FileNotFoundError:
+        lines = []
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+            except Exception as e:
+                lines = [f"Error reading file: {e}\n"]
+        else:
             lines = ["No history found.\n"]
 
-        # ไม่มีการจำกัดจำนวนบันทัดแล้ว — แสดงทั้งหมดที่มี
-
-        # clear textbox
+        # 3. Update Textbox
         self.history_textbox.configure(state="normal")
         self.history_textbox.delete("1.0", "end")
-        self.history_textbox.insert("end", "".join(lines))
-        self.history_textbox.see("end")
+        
+        if lines:
+            # REVERSE the list so the newest dates (the 24th) appear at the top
+            lines.reverse() 
+            self.history_textbox.insert("end", "".join(lines))
+        else:
+            self.history_textbox.insert("end", "--- Log is empty ---")
+            
+        # Since we reversed it, we scroll to the TOP (1.0) to see the latest
+        self.history_textbox.see("1.0") 
         self.history_textbox.configure(state="disabled")
 
-        # recall 2 sec
-        self.after(2000, self.load_history)
-
     def clean_old_logs(self, file_path="Anti-Finger.txt", days=7):
-        """ลบบรรทัด log ที่มี timestamp เก่ากว่า X วัน (เขียนไฟล์แบบอะตอมมิก)"""
         if not os.path.exists(file_path):
             return
 
+        # Calculate cutoff (e.g., anything before Dec 17, 2025)
         cutoff = datetime.now() - timedelta(days=days)
         new_lines = []
-        removed_count = 0
-
-        # รูปแบบวันที่คาดว่า: [YYYY-MM-DD HH:MM:SS]
+        
+        # Regex to find [YYYY-MM-DD HH:MM:SS]
         pattern = re.compile(r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]")
-
-        def try_parse_date(s):
-            try:
-                return datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
-            except Exception:
-                return None
 
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 for line in f:
-                    m = pattern.search(line)
-                    if m:
-                        dt = try_parse_date(m.group(1))
-                        if dt and dt >= cutoff:
-                            new_lines.append(line)
-                        elif dt:
-                            removed_count += 1
-                        else:
+                    match = pattern.search(line)
+                    if match:
+                        try:
+                            log_date = datetime.strptime(match.group(1), "%Y-%m-%d %H:%M:%S")
+                            # Only keep lines newer than the cutoff
+                            if log_date >= cutoff:
+                                new_lines.append(line)
+                        except ValueError:
                             new_lines.append(line)
                     else:
-                        # ถ้าไม่มี timestamp ในบรรทัด ให้เก็บไว้
                         new_lines.append(line)
 
-            tmp_path = file_path + ".tmp"
-            with open(tmp_path, "w", encoding="utf-8") as tmpf:
-                tmpf.writelines(new_lines)
-            os.replace(tmp_path, file_path)
-            print(f"[Log Cleanup] ลบ {removed_count} บรรทัดที่เก่ากว่า {days} วันเรียบร้อยแล้ว")
+            # Rewrite the file with only the valid/recent lines
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.writelines(new_lines)
+                
         except Exception as e:
-            print(f"[Log Cleanup] เกิดข้อผิดพลาด: {e}")
-
-        # recall 2 sec
-        self.after(2000, self.load_history)
+            print(f"Cleanup Error: {e}")
+        
         
         # show main when dont click log
     def show_main_page(self):
@@ -318,20 +341,31 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.main_content_frame.pack_forget()
         self.play_sounds_sequential("009.mp3")
         self.history_page.pack(side="top", fill="both", expand=True, pady=20)
-        # ลบ log เก่าก่อน แล้วค่อยโหลดทั้งหมดเพื่อแสดง
-        self.clean_old_logs()
         self.load_history()
         
 
         #log text setting
     def write_log(self, message):
+        now_str = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        # Example: [2025-12-24 17:40:00] Set: 1 Round: 5 : Pose completed!
+        log_entry = f"{now_str} เซ็ตที่ : {self.set} ครั้งที่ : {self.round} : {message}\n"
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(script_dir, "Anti-Finger.txt")
+        
         now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
         log_message = f"{now} เซ็ตที่ {self.set} ครั้งที่ {self.round} : {message}"
         
-        with open("Anti-Finger.txt", "a", encoding="utf-8") as f:
-            f.write(log_message + "\n") 
-        
-        print(log_message)
+        try:
+            with open(file_path, "a", encoding="utf-8") as f:
+                f.write(log_message + "\n")
+                f.flush()
+                os.fsync(f.fileno())
+            
+            print(f"บันทึกสำเร็จ Log : {file_path}")
+            print(log_message)
+            
+        except Exception as e:
+            print(f"Error writing log: {e}")
     
         # Read values from MCP3008 (5 channels = 5 fingers)
     def check_fingers(self):
@@ -441,7 +475,7 @@ class AntiTriggerFingersApp(ctk.CTk):
         # Dictionary of sensor ranges from MCP3008 for each pose
     gestures = {
         1: [(0,999), (0,600), (0,600), (0,600), (0,800)],
-        2: [(0,999), (870,999), (870,999), (870,999), (670,999)],
+        2: [(0,999), (870,1100), (870,1100), (870,1100), (670,1100)],
         3: [(0,999), (900,999), (900,999), (900,999), (750,999)],
         4: [(0,999), (200,999), (350,999), (350,999), (220,999)],
         5: [(0,999), (0,600), (0,600), (0,600), (0,900)],
@@ -531,7 +565,6 @@ def create_dummy_images():
         print("Dummy images created for demonstration.")
     except Exception as e:
         print(f"Could not create dummy images: {e}. Make sure Pillow is installed.")
-
 
 if __name__ == "__main__":
     create_dummy_images() # Call this to create placeholder images if they don't exist
