@@ -1,5 +1,8 @@
 # Anti-Finger with Raspberry Pi 4 and Python
 
+## Instructional video
+คลิปแนะนำการใช้งาน : https://youtu.be/kbL_fREufYc
+
 ## Overview
 This Python program is a Tkinter-based GUI application called **"AI-Powered Anti-trigger Fingers"**, designed to monitor finger positions using an **MCP3008 ADC** and provide visual and audio feedback based on hand gestures. It uses **CustomTkinter** for a modern UI, **Pillow** for image handling, **pygame** for sound playback, and **threading** to avoid blocking the UI.
 
