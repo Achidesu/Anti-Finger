@@ -9,6 +9,18 @@ import pygame
 from playsound import playsound
 import os
 import re
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import pandas as pd
+from gspread_dataframe import get_as_dataframe
+
+try:
+    scope = ["https://spreadsheets.google.com/feeds",'https://www.googleapis.com/auth/spreadsheets',"https://www.googleapis.com/auth/drive.file","https://www.googleapis.com/auth/drive"]
+    cerds = ServiceAccountCredentials.from_json_keyfile_name("creds.json", scope)
+    client = gspread.authorize(cerds)
+    sheet = client.open("Anti-Finger-Database").worksheet('data')
+except Exception as e:
+    print(e)
 
 # Main Application Class
 class AntiTriggerFingersApp(ctk.CTk):
@@ -343,6 +355,15 @@ class AntiTriggerFingersApp(ctk.CTk):
         self.history_page.pack(side="top", fill="both", expand=True, pady=20)
         self.load_history()
         
+    def insert_data(Machine_ID, Data):
+        now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        df = get_as_dataframe(sheet)
+        ID = df["id"]
+        ID_clean = ID.dropna()
+        Recent_ID = ID_clean.max()
+        data_to_insert = [Recent_ID+1,now,Machine_ID,Data]
+        sheet.append_row(data_to_insert)
+        print(f"Insert Data [{data_to_insert}] Successfully")
 
         #log text setting
     def write_log(self, message):
@@ -351,9 +372,9 @@ class AntiTriggerFingersApp(ctk.CTk):
         log_entry = f"{now_str} เซ็ตที่ : {self.set} ครั้งที่ : {self.round} : {message}\n"
         script_dir = os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(script_dir, "Anti-Finger.txt")
-        
         now = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
         log_message = f"{now} เซ็ตที่ {self.set} ครั้งที่ {self.round} : {message}"
+        log_message_to_db = f"เซ็ตที่ {self.set} ครั้งที่ {self.round} : {message}"
         
         try:
             with open(file_path, "a", encoding="utf-8") as f:
@@ -366,6 +387,11 @@ class AntiTriggerFingersApp(ctk.CTk):
             
         except Exception as e:
             print(f"Error writing log: {e}")
+        
+        try:
+            AntiTriggerFingersApp.insert_data("Anti_finger-001",log_message_to_db)
+        except Exception as e:
+            print(f"Error write to DB : {e}")
     
         # Read values from MCP3008 (5 channels = 5 fingers)
     def check_fingers(self):
@@ -474,11 +500,11 @@ class AntiTriggerFingersApp(ctk.CTk):
  
         # Dictionary of sensor ranges from MCP3008 for each pose
     gestures = {
-        1: [(0,999), (0,600), (0,600), (0,600), (0,800)],
-        2: [(0,999), (870,1100), (870,1100), (870,1100), (670,1100)],
-        3: [(0,999), (900,999), (900,999), (900,999), (750,999)],
+        1: [(0,999), (0,600), (0,600), (0,600), (0,999)],
+        2: [(0,999), (850,1100), (850,1100), (850,1100), (650,1100)],
+        3: [(0,999), (825,999), (825,999), (825,999), (650,999)],
         4: [(0,999), (200,999), (350,999), (350,999), (220,999)],
-        5: [(0,999), (0,600), (0,600), (0,600), (0,900)],
+        5: [(0,999), (0,600), (0,600), (0,600), (0,999)],
     }
     
         # Loop to check values from sensors
